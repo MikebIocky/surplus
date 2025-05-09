@@ -24,7 +24,8 @@ export async function GET() {
       .limit(50);
 
     return NextResponse.json({ notifications });
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('Error fetching notifications:', error);
     return NextResponse.json({ notifications: [] });
   }
 }
@@ -34,7 +35,8 @@ export async function POST(req: Request) {
     const body = await req.json();
     const notification = await Notification.create(body);
     return NextResponse.json(notification);
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('Error creating notification:', error);
     return NextResponse.json({ error: 'Failed to create notification' }, { status: 500 });
   }
 } 

@@ -7,6 +7,7 @@ import dbConnect from '@/lib/dbConnect'; // Import DB connection utility
 import Listing, { IListing } from '@/models/Listing'; // Import Listing model and interface
 import User, { IUser } from '@/models/User'; // Import User model if needed for typing populated fields
 import mongoose, { Types } from 'mongoose'; // Import mongoose types
+import { getMainImageUrl } from '@/lib/getMainImageUrl'; // Import getMainImageUrl utility
 
 // --- Type Definitions ---
 
@@ -44,14 +45,14 @@ async function fetchAllAvailableListings(limit: number = 20): Promise<FetchedLis
         type PopulatedUser = Pick<IUser, 'name' | 'avatar'> & { _id: Types.ObjectId };
         // Define the shape of the document returned by lean, including populated user
         type PopulatedListingDoc =
-            Pick<IListing, 'title' | 'description' | 'image' | 'createdAt' | 'status'> // Select needed fields
+            Pick<IListing, 'title' | 'description' | 'images' | 'createdAt' | 'status'> // Select needed fields
             & { _id: Types.ObjectId; user: PopulatedUser }; // Add _id and populated user type
 
         const listings = await Listing.find({ status: 'available' }) // Fetch only 'available' listings
             .sort({ createdAt: -1 }) // Sort by newest first
             .limit(limit) // Limit the number of results
             .populate<{ user: PopulatedUser }>('user', 'name avatar') // Populate required user fields
-            .select('title description image user createdAt status') // Select fields to return
+            .select('title description images user createdAt status') // Select fields to return
             .lean<PopulatedListingDoc[]>(); // Use lean with type hint
 
         console.log(`[HOME PAGE] Found ${listings.length} available listings.`);
@@ -69,7 +70,7 @@ async function fetchAllAvailableListings(limit: number = 20): Promise<FetchedLis
                     avatar: userExists ? listing.user.avatar : undefined,
                 },
                 description: listing.description,
-                image: listing.image,
+                image: getMainImageUrl(listing.images),
                 createdAt: listing.createdAt, // Include if needed
                 // status: listing.status, // Include if needed
             };
@@ -124,10 +125,10 @@ export default async function HomePage() {
                     key={item.id}
                     id={item.id}
                     title={item.title}
-                    user={item.user} // Pass populated user data
-                    description={item.description} // Pass description
+                    user={item.user}
+                    description={item.description}
                     image={item.image}
-                    // Pass any other props ProductCard requires (like createdAt or status)
+                    createdAt={item.createdAt ?? new Date()}
                   />
                 ))}
               </div>

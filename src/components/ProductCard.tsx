@@ -1,7 +1,7 @@
 // src/components/ProductCard.tsx
 "use client"; // Must be a client component for onClick and localStorage
 
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"; // If displaying status
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from "date-fns";
 import { Clock, MapPin } from "lucide-react";
+import { getMainImageUrl } from '@/lib/getMainImageUrl';
 
 // Props expected by the card
 interface ProductCardProps {
@@ -49,108 +50,96 @@ export function ProductCard({
   user,
   location,
 }: ProductCardProps) {
+  const handleCardClick = () => {
+    console.log(`ProductCard clicked: ${id}, ${title}`);
+    try {
+      if (typeof window !== 'undefined') {
+        const now = Date.now();
+        // Prepare the item data to store
+        const viewedItem: ViewedItem = {
+          id,
+          title,
+          image,
+          userId: user.id,
+          userName: user.name,
+          userAvatar: user.avatar,
+          viewedAt: now,
+        };
 
-    const handleCardClick = () => {
-        console.log(`ProductCard clicked: ${id}, ${title}`);
-        try {
-            if (typeof window !== 'undefined') {
-                const now = Date.now();
-                // Prepare the item data to store
-                const viewedItem: ViewedItem = {
-                    id,
-                    title,
-                    image,
-                    userId: user.id,
-                    userName: user.name,
-                    userAvatar: user.avatar,
-                    viewedAt: now,
-                };
+        // Get existing history or initialize empty array
+        const existingHistoryRaw = localStorage.getItem(VIEWED_HISTORY_KEY);
+        let history: ViewedItem[] = existingHistoryRaw ? JSON.parse(existingHistoryRaw) : [];
 
-                // Get existing history or initialize empty array
-                const existingHistoryRaw = localStorage.getItem(VIEWED_HISTORY_KEY);
-                let history: ViewedItem[] = existingHistoryRaw ? JSON.parse(existingHistoryRaw) : [];
+        // Remove existing entry for this item if it exists (to move it to the top)
+        history = history.filter(item => item.id !== id);
 
-                // Remove existing entry for this item if it exists (to move it to the top)
-                history = history.filter(item => item.id !== id);
+        // Add the new item to the beginning of the array
+        history.unshift(viewedItem);
 
-                // Add the new item to the beginning of the array
-                history.unshift(viewedItem);
-
-                // Limit the history size
-                if (history.length > MAX_HISTORY_ITEMS) {
-                    history = history.slice(0, MAX_HISTORY_ITEMS);
-                }
-
-                // Save back to localStorage
-                localStorage.setItem(VIEWED_HISTORY_KEY, JSON.stringify(history));
-                console.log(`Stored view for item ${id} in localStorage.`);
-            }
-        } catch (error) {
-            console.error("Failed to save view history to localStorage:", error);
+        // Limit the history size
+        if (history.length > MAX_HISTORY_ITEMS) {
+          history = history.slice(0, MAX_HISTORY_ITEMS);
         }
-        // IMPORTANT: Navigation happens via the Link component, not this handler
-    };
 
-    return (
-        <Card
-            className="flex flex-col h-full w-full rounded-2xl border border-border bg-background shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer hover:-translate-y-1 hover:scale-[1.02] overflow-hidden"
-            onClick={handleCardClick}
-        >
-            <Link href={`/product/${id}`} className="flex flex-col h-full w-full group" aria-label={`View details for ${title}`}>
-                <CardHeader className="p-0 relative">
-                    <div className="aspect-video relative w-full bg-muted">
-                        {image ? (
-                            <Image
-                                src={image}
-                                alt={title || 'Listing image'}
-                                fill
-                                style={{ objectFit: 'cover' }}
-                                sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 300px"
-                                className="transition-transform duration-200 group-hover:scale-105 rounded-t-2xl"
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center rounded-t-2xl">
-                                <span className="text-base text-muted-foreground">No Image</span>
-                            </div>
-                        )}
-                        {/* Optional: Status Badge or overlay */}
-                        {/* <Badge variant="secondary" className="absolute top-2 right-2">Available</Badge> */}
-                    </div>
-                </CardHeader>
-                <CardContent className="flex flex-col flex-1 p-4 min-h-0">
-                    <CardTitle className="text-lg font-semibold leading-snug group-hover:text-primary transition-colors line-clamp-2">
-                        {title}
-                    </CardTitle>
-                    <p className="text-sm text-muted-foreground line-clamp-3 flex-shrink-0">
-                        {description}
-                    </p>
-                    {location && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <MapPin className="w-3.5 h-3.5" />
-                            <span>{location}</span>
-                        </div>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-auto">
-                        <Clock className="w-3.5 h-3.5" />
-                        <span suppressHydrationWarning>
-                            {createdAt && !isNaN(new Date(createdAt).getTime())
-                                ? formatDistanceToNow(new Date(createdAt), { addSuffix: true })
-                                : "Unknown time"}
-                        </span>
-                    </div>
-                </CardContent>
-                <CardFooter className="p-4 pt-2 border-t bg-muted/40 flex items-center gap-2">
-                    <Avatar className="h-8 w-8 border">
-                        <AvatarImage src={user.avatar} alt={user.name} />
-                        <AvatarFallback className="text-xs">
-                            {user.name?.split(' ').map(n=>n[0]).slice(0,2).join('').toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
-                    <span className="truncate text-sm font-medium text-foreground">{user.name}</span>
-                </CardFooter>
-            </Link>
-        </Card>
-    );
+        // Save back to localStorage
+        localStorage.setItem(VIEWED_HISTORY_KEY, JSON.stringify(history));
+        console.log(`Stored view for item ${id} in localStorage.`);
+      }
+    } catch (error) {
+      console.error("Failed to save view history to localStorage:", error);
+    }
+    // IMPORTANT: Navigation happens via the Link component, not this handler
+  };
+
+  return (
+    <Link
+      href={`/product/${id}`}
+      className="flex flex-col h-full rounded-2xl overflow-hidden shadow-md bg-white border border-border hover:shadow-xl transition-shadow duration-200"
+      aria-label={`View details for ${title}`}
+      onClick={handleCardClick}
+    >
+      {/* Image Section */}
+      <div className="relative w-full aspect-[4/3] bg-gray-100 flex-shrink-0">
+        <Image
+          src={image || "/no-image.png"}
+          alt={title || "Listing image"}
+          fill
+          className="object-cover"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
+        />
+      </div>
+
+      {/* Content Section */}
+      <div className="flex flex-col flex-1 justify-between p-4">
+        <div>
+          <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">{title}</h3>
+          <p className="text-sm text-gray-600 line-clamp-2 mb-2">{description}</p>
+        </div>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+          <Clock className="w-3.5 h-3.5" />
+          <span suppressHydrationWarning>
+            {createdAt && !isNaN(new Date(createdAt).getTime())
+              ? new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : "Unknown time"}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 border-t pt-3 mt-2">
+          <Avatar className="h-8 w-8 border">
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback>
+              {user.name
+                ?.split(" ")
+                .map((n) => n[0])
+                .slice(0, 2)
+                .join("")
+                .toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <span className="font-medium text-sm text-gray-800 truncate">{user.name}</span>
+        </div>
+      </div>
+    </Link>
+  );
 }
 
 interface RateUserModalProps {
@@ -190,5 +179,33 @@ export function RateUserModal({ userId, onClose, onRated }: RateUserModalProps) 
         {loading ? "Submitting..." : "Submit"}
       </button>
     </form>
+  );
+}
+
+export type { ProductCardProps };
+
+export function FollowButton({ profileId, isFollowingInitial }: { profileId: string, isFollowingInitial: boolean }) {
+  const [isFollowing, setIsFollowing] = useState(isFollowingInitial);
+  const [pending, startTransition] = useTransition();
+
+  const handleClick = () => {
+    startTransition(async () => {
+      const res = await fetch(`/api/users/${profileId}/follow`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: isFollowing ? "unfollow" : "follow" }),
+      });
+      if (res.ok) setIsFollowing(!isFollowing);
+    });
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={pending}
+      className={`px-4 py-2 rounded ${isFollowing ? "bg-gray-200" : "bg-primary text-white"}`}
+    >
+      {pending ? "..." : isFollowing ? "Unfollow" : "Follow"}
+    </button>
   );
 }

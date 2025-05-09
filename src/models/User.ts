@@ -10,22 +10,35 @@ export interface IUser extends Document {
   avatar?: string;
   description?: string;
   rating?: number;
+  following: mongoose.Types.ObjectId[];
+  followers: mongoose.Types.ObjectId[];
   // --- End added fields ---
   createdAt: Date;
   updatedAt: Date;
 }
 
-const UserSchema: Schema<IUser> = new Schema(
+const RatingSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true, match: [/.+\@.+\..+/, 'Please fill a valid email address'] },
-    password: { type: String, required: true, select: false },
-    avatar: { type: String }, // Optional in schema
-    description: { type: String, trim: true }, // Optional in schema
-    rating: { type: Number, default: 0 }, // Example default
+    from: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    value: { type: Number, min: 1, max: 5, required: true },
+    comment: { type: String },
+    createdAt: { type: Date, default: Date.now },
   },
-  { timestamps: true }
+  { _id: false }
 );
+
+const UserSchema = new Schema({
+  name: { type: String, required: true, trim: true },
+  email: { type: String, required: true, unique: true, lowercase: true, trim: true, match: [/.+\@.+\..+/, 'Please fill a valid email address'] },
+  password: { type: String, required: true, select: false },
+  avatar: { type: String },
+  description: { type: String, trim: true },
+  rating: { type: Number, default: 0 },
+  following: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  followers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  ratings: { type: [RatingSchema], default: [] },
+  averageRating: { type: Number, default: 0 },
+}, { timestamps: true });
 
 const User: Model<IUser> = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 export default User;

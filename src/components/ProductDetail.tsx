@@ -106,13 +106,15 @@ export function ProductDetail({
         throw new Error(data.error || 'Failed to claim item');
       }
 
+      const data = await response.json();
+      
       toast({
         title: "Success!",
-        description: "You've successfully claimed this item.",
+        description: "Owner has been notified. Chat started!",
       });
       
-      // Refresh the page to show updated status
-      router.refresh();
+      // Redirect to chat with the owner
+      router.push(`/messages/${data.chatId}`);
     } catch (error) {
       toast({
         title: "Error",

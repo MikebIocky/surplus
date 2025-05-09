@@ -78,9 +78,9 @@ export default function LoginPage() {
         throw new Error("Login failed: Server response incomplete.");
       }
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login Page Error:", err);
-      setError(err.message || "An unknown error occurred during login.");
+      setError(err instanceof Error ? err.message : "An unknown error occurred during login.");
       setIsLoading(false); // Stop loading ONLY on error
     }
     // Do not set isLoading to false on success because we redirect
@@ -147,7 +147,7 @@ export default function LoginPage() {
              Forgot your password?
           </Link> */}
           <p className="text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/sign-up" className={cn( // Use cn if disabling link while loading
                 "font-medium underline underline-offset-4 hover:text-primary",
                 isLoading && "pointer-events-none opacity-50" // Example: Disable link when loading

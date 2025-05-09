@@ -6,6 +6,7 @@ import Image from 'next/image'; // Keep if ProductCard uses it
 import { cookies } from 'next/headers'; // Core Next.js function for server-side cookie access
 import jwt from 'jsonwebtoken'; // For verifying JWT tokens
 import mongoose, { Types } from 'mongoose'; // For ObjectId validation and types
+import { jwtVerify } from 'jose';
 
 // --- DB & Model Imports ---
 import dbConnect from '@/lib/dbConnect';        // Ensure correct path
@@ -18,8 +19,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 // Note: Card components are not used directly here if ProfileTabs handles card display
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit, Star } from "lucide-react";
+import { Edit, Star, MessageCircle, UserPlus, UserMinus } from "lucide-react";
 import { ProfileTabs } from '@/components/ProfileTabs'; // Ensure this Client Component exists
+import Link from 'next/link';
+import FollowButton from '@/components/FollowButton';
 
 // --- Type Definitions ---
 
@@ -43,12 +46,11 @@ interface CardUserData {
 interface PopulatedListingCardData {
     id: string;
     title: string;
-    user: CardUserData; // Contains original poster/lister info
+    user: CardUserData;
     description: string;
-    image?: string;
-    // Include other fields ProductCard might need (status, createdAt, etc.)
-    // status?: string;
-    // createdAt?: Date;
+    image: string;
+    status?: string;
+    createdAt?: Date;
 }
 
 // --- Server-Side Data Fetching Functions ---
@@ -99,23 +101,23 @@ async function fetchPostedListings(userId: string): Promise<PopulatedListingCard
         type PopulatedDoc = IListing & { _id: Types.ObjectId; user: PopulatedUser };
 
         const listings = await Listing.find({ user: userId })
-            .select('title description image user status createdAt') // Select fields needed by ProductCard
-            .populate<{ user: PopulatedUser }>('user', 'name avatar') // Populate user name/avatar
+            .select('title description images user status createdAt')
+            .populate<{ user: PopulatedUser }>('user', 'name avatar')
             .sort({ createdAt: -1 })
             .lean<PopulatedDoc[]>();
 
         return listings.map(listing => ({
             id: listing._id.toString(),
             title: listing.title,
-            user: { // User who posted
+            user: {
                 id: listing.user._id.toString(),
-                name: listing.user.name ?? 'Unknown User', // Provide default
+                name: listing.user.name ?? 'Unknown User',
                 avatar: listing.user.avatar,
             },
             description: listing.description,
-            image: listing.image,
-            // status: listing.status, // Uncomment if needed
-            // createdAt: listing.createdAt, // Uncomment if needed
+            image: listing.images?.[0]?.url, // Take first image URL if available
+            status: listing.status,
+            createdAt: listing.createdAt,
         }));
     } catch (error) {
         console.error(`[PROFILE PAGE] fetchPostedListings: Error for user ${userId}:`, error);
@@ -132,38 +134,36 @@ async function fetchReceivedListings(userId: string): Promise<PopulatedListingCa
     try {
         await dbConnect();
         type PopulatedUser = { _id: Types.ObjectId; name: string; avatar?: string };
-        // Ensure IListing includes user field typed correctly for population result
         type PopulatedListing = IListing & { _id: Types.ObjectId; user: PopulatedUser };
         type PopulatedOrderDoc = IOrder & { _id: Types.ObjectId; listing: PopulatedListing };
 
         const orders = await Order.find({ recipient: userId })
-            .select('listing claimedAt') // Select needed fields from Order
-            .populate<{ listing: PopulatedListing }>({ // Type hint for populate
-                path: 'listing', // Populate the listing field
-                select: 'title description image user status createdAt', // Select needed fields from Listing
-                populate: { path: 'user', select: 'name avatar', model: User } // Nested populate user who posted
+            .select('listing claimedAt')
+            .populate<{ listing: PopulatedListing }>({
+                path: 'listing',
+                select: 'title description images user status createdAt',
+                populate: { path: 'user', select: 'name avatar', model: User }
             })
             .sort({ claimedAt: -1 })
-            .lean<PopulatedOrderDoc[]>(); // Apply type hint
+            .lean<PopulatedOrderDoc[]>();
 
         const mappedListings = orders.map(order => {
-            if (!order.listing?._id || !order.listing.user?._id) { // Check required populated data
+            if (!order.listing?._id || !order.listing.user?._id) {
                 console.warn(`[PROFILE PAGE] fetchReceivedListings: Order ${order._id} missing populated listing/user.`);
                 return null;
             }
             const cardData: PopulatedListingCardData = {
                 id: order.listing._id.toString(),
                 title: order.listing.title,
-                user: { // Original poster
+                user: {
                     id: order.listing.user._id.toString(),
                     name: order.listing.user.name ?? 'Original Lister',
                     avatar: order.listing.user.avatar,
                 },
                 description: order.listing.description,
-                image: order.listing.image,
-                // status: order.listing.status, // Uncomment if needed
-                // createdAt: order.listing.createdAt, // Uncomment if needed
-                // claimedAt: order.claimedAt, // Pass this if needed by ProductCard
+                image: order.listing.images?.[0]?.url, // Take first image URL if available
+                status: order.listing.status,
+                createdAt: order.listing.createdAt,
             };
             return cardData;
         });
@@ -181,27 +181,19 @@ async function fetchReceivedListings(userId: string): Promise<PopulatedListingCa
  * Returns null if token invalid, missing, expired, or secret not set.
  */
 async function getLoggedInUserId(): Promise<string | null> {
-    // ** FIX APPLIED HERE **
-    const cookieStore = await cookies(); // Await the promise to get the cookie store object
-    const tokenCookie = cookieStore.get('authToken'); // Call .get() on the resolved object
-
-    if (!tokenCookie?.value) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('authToken')?.value;
+    console.log('TOKEN:', token);
+    if (!token) {
         // This is normal if user is not logged in, so don't log error
         // console.log("[AUTH] No auth token cookie found.");
         return null;
     }
 
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-        // This IS an error - should be logged prominently
-        console.error("[AUTH] CRITICAL: JWT_SECRET environment variable is not set.");
-        return null;
-    }
-
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
     try {
-        // Verify token and extract user ID from payload { user: { id: '...' } }
-        const decoded = jwt.verify(tokenCookie.value, secret) as { user?: { id?: string } };
-        return decoded?.user?.id || null;
+        const { payload } = await jwtVerify(token, secret);
+        return (payload as any).user?.id as string;
     } catch (error) {
         // Log specific JWT errors for easier debugging
         if (error instanceof jwt.TokenExpiredError) {
@@ -215,85 +207,90 @@ async function getLoggedInUserId(): Promise<string | null> {
     }
 }
 
+// Add this function after getLoggedInUserId
+async function checkIfFollowing(followerId: string, followingId: string): Promise<boolean> {
+    if (!mongoose.Types.ObjectId.isValid(followerId) || !mongoose.Types.ObjectId.isValid(followingId)) {
+        return false;
+    }
+    try {
+        await dbConnect();
+        const user = await User.findById(followerId).select('following').lean();
+        return user?.following?.some((id: Types.ObjectId) => id.toString() === followingId) ?? false;
+    } catch (error) {
+        console.error(`[PROFILE PAGE] checkIfFollowing: Error checking follow status:`, error);
+        return false;
+    }
+}
 
 // --- Dynamic Profile Page Server Component ---
 
-export default async function DynamicProfilePage({ params }: { params: { userId: string } }) {
+export default async function DynamicProfilePage({ params }: { params: Promise<{ userId: string }> }) {
+    const { userId } = await params;
+    const loggedInUserId = await getLoggedInUserId();
+    const isOwnProfile = loggedInUserId === userId;
+    const isFollowing = loggedInUserId ? await checkIfFollowing(loggedInUserId, userId) : false;
 
-    const profileUserId = params.userId;
-
-    // 1. Validate requested user ID format
-    if (!mongoose.Types.ObjectId.isValid(profileUserId)) {
-        console.log(`[PROFILE PAGE] Invalid userId param format: ${profileUserId}`);
-        notFound(); // Invalid ID format is a 404
-    }
-
-    // 2. Fetch all data concurrently
-    // Note: A Suspense boundary could be used around ProfileTabs if loading listings is slow
-    // and you want the header to render first.
-    const [loggedInUserId, profileData, postedListings, receivedListings] = await Promise.all([
-        getLoggedInUserId(),
-        fetchUserProfile(profileUserId),
-        fetchPostedListings(profileUserId),
-        fetchReceivedListings(profileUserId)
+    const [profileData, postedListings, receivedListings] = await Promise.all([
+        fetchUserProfile(userId),
+        fetchPostedListings(userId),
+        fetchReceivedListings(userId)
     ]);
 
-    // 3. Check if the profile user exists (essential data)
     if (!profileData) {
-        console.log(`[PROFILE PAGE] Profile not found in DB for userId: ${profileUserId}`);
-        notFound(); // User doesn't exist is a 404
+        notFound();
     }
 
-    // 4. Determine if the viewer owns this profile
-    const isOwnProfile = loggedInUserId === profileData.id;
-
-    // 5. Render the page
     return (
-        // Using fragment as root unless a specific wrapper div is needed
-        <>
-            {/* Profile Header Section - Rendered on Server */}
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6 p-4 md:p-6 rounded-lg border bg-card text-card-foreground shadow-sm mb-8">
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 border-4 border-primary/30 flex-shrink-0">
-                    <AvatarImage src={profileData.avatar} alt={`${profileData.name}'s avatar`} />
-                    <AvatarFallback className="text-3xl bg-muted">
-                        {/* Generate initials */}
-                        {profileData.name?.split(' ').map(n => n[0]).slice(0, 2).join('')}
+        <div className="container max-w-6xl mx-auto py-8">
+            {/* Profile Header */}
+            <div className="flex items-start gap-6 mb-8">
+                <Avatar className="h-24 w-24">
+                    <AvatarImage src={profileData.avatar} />
+                    <AvatarFallback className="text-2xl">
+                        {profileData.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                 </Avatar>
-                <div className="flex-grow space-y-2 min-w-0"> {/* min-w-0 prevents flex item overflow */}
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h1 className="text-3xl font-bold truncate">{profileData.name}</h1>
-                        {/* Show Edit button only on own profile */}
-                        {isOwnProfile && (
-                            // Use standard HTML link for navigation triggered from Server Component
-                            <a href="/settings" className="inline-block flex-shrink-0">
-                                <Button variant="outline" size="sm">
-                                    <Edit className="mr-2 h-4 w-4" /> Edit Profile
-                                </Button>
-                            </a>
+                <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-2">
+                        <h1 className="text-2xl font-bold">{profileData.name}</h1>
+                        {profileData.rating && (
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                                <Star className="h-4 w-4 fill-current" />
+                                <span>{profileData.rating.toFixed(1)}</span>
+                            </div>
                         )}
                     </div>
-                    {/* Conditionally render Rating */}
-                    {(profileData.rating ?? 0) > 0 && ( // Use nullish coalescing for default check
-                        <div className="flex items-center gap-1 text-yellow-500">
-                            <Star className="w-5 h-5 fill-current" />
-                            <span className="font-semibold text-lg text-foreground">{profileData.rating?.toFixed(1)}</span>
-                            <span className="text-sm text-muted-foreground">(Rating)</span>
-                        </div>
+                    {profileData.description && (
+                        <p className="text-muted-foreground mb-4">{profileData.description}</p>
                     )}
-                    {/* Display Description */}
-                    <p className="text-muted-foreground text-base pt-1">
-                        {profileData.description || "No description provided."}
-                    </p>
+                    <div className="flex gap-2">
+                        {isOwnProfile ? (
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href="/settings">
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit Profile
+                                </Link>
+                            </Button>
+                        ) : (
+                            <>
+                                <Button variant="outline" size="sm" asChild>
+                                    <Link href={`/messages/${userId}`}>
+                                        <MessageCircle className="h-4 w-4 mr-2" />
+                                        Message
+                                    </Link>
+                                </Button>
+                                <FollowButton userId={userId} initialIsFollowing={isFollowing} />
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Listing Tabs - Delegated to Client Component */}
-            {/* Pass fetched data as props to the client component */}
+            {/* Profile Tabs */}
             <ProfileTabs
                 postedListings={postedListings}
                 receivedListings={receivedListings}
             />
-        </>
+        </div>
     );
 }

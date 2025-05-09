@@ -5,21 +5,12 @@
 import React from 'react';
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Geist, Geist_Mono } from "next/font/google";
 import { SearchProvider } from "@/components/SearchProvider";
 import { SearchBar } from "@/components/SearchBar";
 import { SearchResults } from "@/components/SearchResults";
 import { useSearch } from "@/components/SearchProvider";
-
-const geistSans = Geist({
-    variable: "--font-geist-sans",
-    subsets: ["latin"],
-  });
-  
-  const geistMono = Geist_Mono({
-    variable: "--font-geist-mono",
-    subsets: ["latin"],
-  });
+import { geistSans, geistMono } from '@/lib/fonts';
+import Image from 'next/image';
 
 function MainContent({ children }: { children: React.ReactNode }) {
   const { handleSearch, searchResults, handleCloseSearch } = useSearch();
@@ -51,16 +42,16 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-   return (
-      <div className="min-h-screen flex">
-        <SearchProvider>
-          <SidebarProvider>
-            <AppSidebar />
-            <MainContent>
-              {children}
-            </MainContent>
-          </SidebarProvider>
-        </SearchProvider>
-      </div>
-    );
+  return (
+    <div className={`min-h-screen flex ${geistSans.variable} ${geistMono.variable}`}>
+      <SearchProvider>
+        <SidebarProvider>
+          <AppSidebar />
+          <MainContent>
+            {children}
+          </MainContent>
+        </SidebarProvider>
+      </SearchProvider>
+    </div>
+  );
 }

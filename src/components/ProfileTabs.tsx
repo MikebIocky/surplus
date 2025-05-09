@@ -49,7 +49,7 @@ export function ProfileTabs({ postedListings, receivedListings }: ProfileTabsPro
                 user={item.user}
                 description={item.description}
                 image={item.image}
-                // Pass other props if ProductCard expects them (status, createdAt)
+                createdAt={item.createdAt ?? new Date()}
               />
             ))}
           </div>
@@ -69,10 +69,10 @@ export function ProfileTabs({ postedListings, receivedListings }: ProfileTabsPro
                 key={`received-${item.id}`}
                 id={item.id}
                 title={item.title}
-                user={item.user} // Original lister
+                user={item.user}
                 description={item.description}
                 image={item.image}
-                 // Pass other props if ProductCard expects them
+                createdAt={item.createdAt ?? new Date()}
               />
             ))}
           </div>

@@ -4,6 +4,7 @@ import dbConnect from '@/lib/dbConnect';        // Database connection utility
 import Listing, { IListing } from '@/models/Listing'; // Listing model and TS interface
 import User, { IUser } from '@/models/User';        // User model and TS interface
 import mongoose, { Types } from 'mongoose';       // Mongoose for ObjectId validation and types
+import { getMainImageUrl } from '@/lib/getMainImageUrl';
 
 // --- Type Definitions ---
 
@@ -75,14 +76,14 @@ export async function fetchListingDetails(listingId: string): Promise<ProductPag
         // Type for the lean document, including selected IListing fields AND the populated user
         // IMPORTANT: Assumes IListing includes all selected fields (title, desc, image, status, quantity, etc.)
         type PopulatedListingDoc =
-             Pick<IListing, 'title' | 'description' | 'image' | 'imagePublicId' | 'status' | 'quantity' | 'expiryDate' | 'location' | 'contact' | 'createdAt'>
+             Pick<IListing, 'title' | 'description' | 'images' | 'status' | 'quantity' | 'expiryDate' | 'location' | 'contact' | 'createdAt'>
              & { _id: Types.ObjectId; user: PopulatedUser }; // Combine selected fields with _id and populated user
 
         // 4. Fetch Listing from Database using Mongoose
         const listing = await Listing.findById(listingId)
             .populate<{ user: PopulatedUser }>('user', 'name avatar rating') // Populate specified user fields
             // Select ALL fields needed from the Listing model for display and editing prep
-            .select('title description image imagePublicId status user quantity expiryDate location contact createdAt')
+            .select('title description images status user quantity expiryDate location contact createdAt')
             .lean<PopulatedListingDoc>(); // Use lean() with the specific type hint
 
         // 5. Handle Not Found or Population Failure
@@ -107,8 +108,7 @@ export async function fetchListingDetails(listingId: string): Promise<ProductPag
                 rating: listing.user.rating, // Include rating from populated user
             },
             status: listing.status, // Pass status directly
-            image: listing.image,
-            imagePublicId: listing.imagePublicId, // Include imagePublicId
+            image: getMainImageUrl(listing.images),
             description: listing.description,
             details: { // Map relevant fields into the nested 'details' object
                 quantity: listing.quantity,
@@ -150,7 +150,7 @@ export async function fetchRecommendedListings(
          // 3. Define Types for Populated Result
          type PopulatedUser = Pick<IUser, 'name' | 'avatar'> & { _id: Types.ObjectId };
          // Select only title, image from Listing for the recommended card + _id and populated user
-         type PopulatedListingDoc = Pick<IListing, 'title' | 'image'> & { _id: Types.ObjectId; user: PopulatedUser };
+         type PopulatedListingDoc = Pick<IListing, 'title' | 'images'> & { _id: Types.ObjectId; user: PopulatedUser };
 
          // 4. Fetch Listings from Database
          const listings = await Listing.find({
@@ -161,30 +161,25 @@ export async function fetchRecommendedListings(
          .limit(limit)                  // Apply the limit
          .sort({ createdAt: -1 })       // Sort newest first (or adjust sorting logic)
          .populate<{ user: PopulatedUser }>('user', 'name avatar') // Populate basic user info
-         .select('title image user')    // Select only fields needed for the recommendation card
+         .select('title images user')    // Select only fields needed for the recommendation card
          .lean<PopulatedListingDoc[]>(); // Use lean with type hint
 
          console.log(`[FETCH RECOMMENDED] Found ${listings.length} recommendations.`);
 
          // 5. Map DB documents to the RecommendedItemData structure
-         return listings.map(listing => {
-            // Basic check for populated user
-             const userExists = !!listing.user?._id;
-             return {
-                 id: listing._id.toString(),
-                 title: listing.title,
-                 image: listing.image,
-                 user: { // Structure matching RecommendedItemData.user
-                     id: userExists ? listing.user._id.toString() : '',
-                     name: userExists ? listing.user.name ?? 'Unknown User' : 'Unknown User',
-                     avatar: userExists ? listing.user.avatar : undefined,
-                 }
-                 // description: listing.description // Add if ProductCard needs it for recommendations
-             };
-         });
+         return listings.map(listing => ({
+             id: listing._id.toString(),
+             title: listing.title,
+             image: getMainImageUrl(listing.images),
+             user: {
+                 id: listing.user._id.toString(),
+                 name: listing.user.name ?? 'Unknown User',
+                 avatar: listing.user.avatar,
+             }
+         }));
 
      } catch (error) {
-         console.error(`[FETCH RECOMMENDED] Database error fetching recommendations for user ${userIdOfPoster}:`, error);
-         return []; // Return empty array on error
+         console.error(`[FETCH RECOMMENDED] Database/processing error for recommendations:`, error);
+         return []; // Return empty array on any unexpected error
      }
- }
+}

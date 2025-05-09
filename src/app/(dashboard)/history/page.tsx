@@ -99,15 +99,14 @@ export default function HistoryPage() {
             const cardProps: ProductCardProps = {
                 id: item.id,
                 title: item.title,
-                // Reconstruct the user object ProductCard expects
                 user: {
                     id: item.userId,
                     name: item.userName,
                     avatar: item.userAvatar,
                 },
-                // Description is not stored, pass empty or default
-                description: "(Viewed Listing)", // Add placeholder description
+                description: "(Viewed Listing)",
                 image: item.image,
+                createdAt: new Date(item.viewedAt), // Use viewedAt as a fallback
             };
             return <ProductCard key={`history-${item.id}`} {...cardProps} />;
           })}

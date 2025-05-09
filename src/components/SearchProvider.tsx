@@ -2,11 +2,41 @@
 
 import { createContext, useContext, useState, useCallback, useMemo } from 'react';
 
+interface User {
+  _id: string;
+  id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
+interface Listing {
+  _id: string;
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  images: Array<{
+    url: string;
+    publicId: string;
+  }>;
+  quantity: string;
+  location: string;
+  status: string;
+  user: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  } | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface SearchContextType {
     isSearching: boolean;
     searchResults: {
-        users: any[];
-        listings: any[];
+        users: User[];
+        listings: Listing[];
     };
     handleSearch: (query: string) => Promise<void>;
     handleCloseSearch: () => void;
@@ -29,8 +59,8 @@ interface SearchProviderProps {
 export function SearchProvider({ children }: SearchProviderProps) {
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState<{
-        users: any[];
-        listings: any[];
+        users: User[];
+        listings: Listing[];
     }>({ users: [], listings: [] });
 
     const handleSearch = useCallback(async (query: string) => {
