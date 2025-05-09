@@ -224,8 +224,8 @@ async function checkIfFollowing(followerId: string, followingId: string): Promis
 
 // --- Dynamic Profile Page Server Component ---
 
-export default async function DynamicProfilePage({ params }: { params: Promise<{ userId: string }> }) {
-    const { userId } = await params;
+export default async function DynamicProfilePage({ params }: { params: { userId: string } }) {
+    const { userId } = params;
     const loggedInUserId = await getLoggedInUserId();
     const isOwnProfile = loggedInUserId === userId;
     const isFollowing = loggedInUserId ? await checkIfFollowing(loggedInUserId, userId) : false;

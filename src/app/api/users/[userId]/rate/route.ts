@@ -21,9 +21,9 @@ async function getLoggedInUserId() {
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
+  { params }: { params: { userId: string } }
 ) {
-  const { userId } = await params;
+  const { userId } = params;
   const raterId = await getLoggedInUserId();
   if (!raterId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!mongoose.Types.ObjectId.isValid(userId)) return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });

@@ -23,15 +23,15 @@ async function getLoggedInUserId() {
 // POST /api/users/[userId]/follow
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
+  { params }: { params: { userId: string } }
 ) {
+  const { userId } = params;
   try {
     const loggedInUserId = await getLoggedInUserId();
     if (!loggedInUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId } = await params;
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
     }
@@ -79,15 +79,15 @@ export async function POST(
 // DELETE /api/users/[userId]/follow
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ userId: string }> }
+  { params }: { params: { userId: string } }
 ) {
+  const { userId } = params;
   try {
     const loggedInUserId = await getLoggedInUserId();
     if (!loggedInUserId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { userId } = await params;
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
     }

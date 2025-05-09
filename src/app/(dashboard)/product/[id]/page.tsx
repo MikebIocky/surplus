@@ -71,7 +71,7 @@ export default async function ProductPage({ params }: { params: { id: string } }
     }
 
     // 2. Validate product ID format
-    const productId = await params.id;
+    const productId = params.id;
     if (!mongoose.Types.ObjectId.isValid(productId)) {
         notFound();
     }
