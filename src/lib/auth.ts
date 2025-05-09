@@ -1,6 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { User } from "@/models/User";
+import User from "@/models/User";
 import { connectToDatabase } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
@@ -19,14 +19,14 @@ export const authOptions: NextAuthOptions = {
 
         await connectToDatabase();
 
-        const user = await User.findOne({ email: credentials.email });
+        const user = await User.findOne({ email: credentials.email }).select('+password');
         if (!user) {
           throw new Error("Invalid credentials");
         }
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
-          user.password
+          user.password as string
         );
 
         if (!isPasswordValid) {
@@ -52,8 +52,8 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
+      if (token && session.user) {
+        (session.user as { id?: string }).id = token.id as string;
       }
       return session;
     }
