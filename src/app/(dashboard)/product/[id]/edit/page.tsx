@@ -22,7 +22,7 @@ interface PageProps {
 // async function getLoggedInUserIdServer(): Promise<string | null> { ... DO NOT REDEFINE HERE ... }
 
 // Server Component to fetch data and authorize
-export default async function EditProductPage({ params }: PageProps) {
+export default async function EditProductPage({ params }: { params: { id: string } }) {
     const listingId = params.id;
 
     // 1. Validate ID format
