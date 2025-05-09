@@ -33,8 +33,8 @@ interface ConversationUser {
   avatar?: string;
 }
 
-export default function ConversationPage({ params }: { params: { conversationId: string } }) {
-  const conversationId = React.use(params).conversationId;
+export default function ConversationPage({ params }: { params: Promise<{ conversationId: string }> }) {
+  const { conversationId } = React.use(params);
   const router = useRouter();
   const { user, isLoading: isAuthLoading } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
