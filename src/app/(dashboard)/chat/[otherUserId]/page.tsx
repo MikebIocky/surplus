@@ -19,13 +19,7 @@ interface Message {
   createdAt: string;
 }
 
-interface ChatPageProps {
-  params: {
-    otherUserId: string;
-  };
-}
-
-export default function ChatPage({ params }: ChatPageProps) {
+export default function ChatPage({ params }: { params: { otherUserId: string } }) {
   const otherUserId = params.otherUserId;
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
