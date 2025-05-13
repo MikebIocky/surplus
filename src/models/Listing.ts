@@ -11,8 +11,9 @@ export interface IListing extends Document {
     url: string;
     publicId: string;
   }>;
-  status: 'available' | 'claimed' | 'archived'; // Specific allowed statuses
+  status: 'available' | 'pending' | 'claimed' | 'archived'; // Specific allowed statuses
   user: Types.ObjectId | IUser; // Reference to the User who posted it (can be populated)
+  category: string; // Add category field
 
   // --- Fields often needed for display/details ---
   quantity?: string;         // Optional: Describes amount (e.g., "1 bunch", "500g")
@@ -28,6 +29,11 @@ export interface IListing extends Document {
   // Timestamps managed by Mongoose
   createdAt: Date;
   updatedAt: Date;
+
+  pendingClaim?: {
+    user: Types.ObjectId | IUser;
+    requestedAt: Date;
+  };
 }
 
 // Define the Mongoose Schema corresponding to the IListing interface
@@ -56,12 +62,21 @@ const ListingSchema: Schema<IListing> = new Schema(
     status: {
         type: String,
         enum: {
-            values: ['available', 'claimed', 'archived'], // Allowed values
-            message: '{VALUE} is not a supported status.' // Custom error message
+            values: ['available', 'pending', 'claimed', 'archived'], // Added 'pending'
+            message: '{VALUE} is not a supported status.'
         },
         default: 'available',
         required: true,
-        index: true // Add index if you frequently query/filter by status
+        index: true
+    },
+    category: {
+        type: String,
+        required: [true, 'Category is required.'],
+        enum: {
+            values: ['produce', 'dairy', 'bakery', 'meat', 'pantry', 'other'],
+            message: '{VALUE} is not a supported category.'
+        },
+        index: true // Add index for category filtering
     },
     user: { // The user who created the listing
         type: Schema.Types.ObjectId,
@@ -98,6 +113,11 @@ const ListingSchema: Schema<IListing> = new Schema(
         type: Date
     },
     // --- End claim tracking fields ---
+
+    pendingClaim: {
+        user: { type: Schema.Types.ObjectId, ref: 'User' },
+        requestedAt: { type: Date }
+    },
   },
   {
     timestamps: true // Automatically add createdAt and updatedAt fields

@@ -101,11 +101,13 @@ export function ProductCard({
       {/* Image Section */}
       <div className="relative w-full aspect-[4/3] bg-gray-100 flex-shrink-0">
         <Image
-          src={image || "/no-image.png"}
+          src={typeof image === 'string' && image.trim() ? image : '/no-image.png'}
           alt={title || "Listing image"}
           fill
           className="object-cover"
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px"
+          priority={false}
+          loading="lazy"
         />
       </div>
 

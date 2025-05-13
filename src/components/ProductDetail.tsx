@@ -109,12 +109,9 @@ export function ProductDetail({
       const data = await response.json();
       
       toast({
-        title: "Success!",
-        description: "Owner has been notified. Chat started!",
+        title: "Request sent!",
+        description: "Your claim request has been sent. Please wait for the owner's response.",
       });
-      
-      // Redirect to chat with the owner
-      router.push(`/messages/${data.chatId}`);
     } catch (error) {
       toast({
         title: "Error",

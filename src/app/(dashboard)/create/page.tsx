@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Upload, X, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ImageFile {
   file: File;
@@ -31,6 +32,7 @@ export default function CreateListingPage() {
   const [expiryDate, setExpiryDate] = useState('');
   const [location, setLocation] = useState('');
   const [contact, setContact] = useState('');
+  const [category, setCategory] = useState('');
   const [images, setImages] = useState<ImageFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -175,6 +177,7 @@ export default function CreateListingPage() {
           description: description.trim(),
           quantity: quantity.trim(),
           location: location.trim(),
+          category: category,
           images: uploadResults.map(result => ({
             url: result!.secure_url,
             publicId: result!.public_id
@@ -294,6 +297,29 @@ export default function CreateListingPage() {
                 required
                 disabled={isLoading}
               />
+            </div>
+
+            {/* Category */}
+            <div className="space-y-1.5">
+              <Label htmlFor="category">Category *</Label>
+              <Select
+                value={category}
+                onValueChange={setCategory}
+                required
+                disabled={isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="produce">Produce</SelectItem>
+                  <SelectItem value="dairy">Dairy</SelectItem>
+                  <SelectItem value="bakery">Bakery</SelectItem>
+                  <SelectItem value="meat">Meat</SelectItem>
+                  <SelectItem value="pantry">Pantry</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Description */}

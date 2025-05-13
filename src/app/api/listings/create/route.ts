@@ -17,7 +17,11 @@ interface CreateListingRequestBody {
   description: string;
   quantity: string;
   location: string;
-  images: string[];
+  category: string;
+  images: Array<{
+    url: string;
+    publicId: string;
+  }>;
   expiryDate?: string | null; // Allow null from frontend if date cleared
   contact?: string | null;  // Allow null from frontend if cleared
 }
@@ -96,13 +100,14 @@ export async function POST(request: NextRequest) {
       description,
       quantity,
       location,
+      category,
       images,
       expiryDate,
       contact,
     } = body;
 
     // 4. Validate required fields
-    if (!title || !description || !quantity || !location || !images || !Array.isArray(images) || images.length === 0) {
+    if (!title || !description || !quantity || !location || !category || !images || !Array.isArray(images) || images.length === 0) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -115,6 +120,7 @@ export async function POST(request: NextRequest) {
       description,
       quantity,
       location,
+      category,
       images,
       expiryDate: expiryDate || null,
       contact: contact || null,

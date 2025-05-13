@@ -12,3 +12,10 @@ export default function DefaultChatPage() {
     </div>
   );
 }
+
+export function getMainImageUrl(images?: { url: string; publicId: string }[]): string | undefined {
+  if (!images || !Array.isArray(images) || images.length === 0 || !images[0]?.url) {
+    return undefined;
+  }
+  return images[0].url;
+}

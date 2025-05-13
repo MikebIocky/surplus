@@ -1,12 +1,5 @@
-export function getMainImageUrl(images?: { url: string }[] | undefined): string | undefined {
-  if (
-    Array.isArray(images) &&
-    images.length > 0 &&
-    images[0].url &&
-    !images[0].url.includes('your_cloud_name') &&
-    !images[0].url.includes('placeholder.jpg')
-  ) {
-    return images[0].url;
-  }
-  return undefined; // or return '/no-image.png' for a local fallback
+export function getMainImageUrl(images?: { url: string; publicId: string }[]): string | undefined {
+  if (!images || !Array.isArray(images)) return undefined;
+  const found = images.find(img => typeof img.url === 'string' && img.url.trim());
+  return found?.url;
 } 

@@ -1,5 +1,5 @@
 // src/app/page.tsx
-// Remove "use client" - This should be a Server Component to fetch data
+"use client" // Add back client directive since we need client-side interactivity
 
 import React from 'react'; // Import React
 import { ProductCard, ProductCardProps } from "@/components/ProductCard"; // Import ProductCard and its props type if available
@@ -8,6 +8,8 @@ import Listing, { IListing } from '@/models/Listing'; // Import Listing model an
 import User, { IUser } from '@/models/User'; // Import User model if needed for typing populated fields
 import mongoose, { Types } from 'mongoose'; // Import mongoose types
 import { getMainImageUrl } from '@/lib/getMainImageUrl'; // Import getMainImageUrl utility
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // --- Type Definitions ---
 
@@ -27,114 +29,119 @@ interface FetchedListingData {
     description: string; // Assuming ProductCard needs description
     image?: string;
     createdAt?: Date; // Optional: for sorting or display
-    // Add other fields ProductCard might need, like status
+    category: string; // Add category field
 }
 
-// --- Server-Side Data Fetching Function ---
+// --- Home Page Component ---
+export default function HomePage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const category = searchParams.get('category') || 'all';
 
-/**
- * Fetches available listings from the database, sorted by creation date.
- * Populates basic user information needed for the ProductCard.
- */
-async function fetchAllAvailableListings(limit: number = 20): Promise<FetchedListingData[]> {
-    console.log("[HOME PAGE] Attempting to fetch listings...");
-    try {
-        await dbConnect(); // Ensure DB connection
+    // Handle category change
+    const handleCategoryChange = (value: string) => {
+        const url = new URL(window.location.href);
+        if (value === 'all') {
+            url.searchParams.delete('category');
+        } else {
+            url.searchParams.set('category', value);
+        }
+        router.push(url.toString());
+    };
 
-        // Define types for populated result
-        type PopulatedUser = Pick<IUser, 'name' | 'avatar'> & { _id: Types.ObjectId };
-        // Define the shape of the document returned by lean, including populated user
-        type PopulatedListingDoc =
-            Pick<IListing, 'title' | 'description' | 'images' | 'createdAt' | 'status'> // Select needed fields
-            & { _id: Types.ObjectId; user: PopulatedUser }; // Add _id and populated user type
+    // Fetch listings based on category
+    const [listings, setListings] = React.useState<FetchedListingData[]>([]);
+    const [isLoading, setIsLoading] = React.useState(true);
 
-        const listings = await Listing.find({ status: 'available' }) // Fetch only 'available' listings
-            .sort({ createdAt: -1 }) // Sort by newest first
-            .limit(limit) // Limit the number of results
-            .populate<{ user: PopulatedUser }>('user', 'name avatar') // Populate required user fields
-            .select('title description images user createdAt status') // Select fields to return
-            .lean<PopulatedListingDoc[]>(); // Use lean with type hint
+    React.useEffect(() => {
+        async function fetchListings() {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`/api/listings?category=${category}`);
+                const data = await response.json();
+                setListings(data);
+            } catch (error) {
+                console.error('Error fetching listings:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchListings();
+    }, [category]);
 
-        console.log(`[HOME PAGE] Found ${listings.length} available listings.`);
+    // Group listings by category
+    const listingsByCategory = listings.reduce((acc, listing) => {
+        const category = listing.category || 'other';
+        if (!acc[category]) {
+            acc[category] = [];
+        }
+        acc[category].push(listing);
+        return acc;
+    }, {} as Record<string, FetchedListingData[]>);
 
-        // Map the database documents to the structure needed by ProductCard
-        return listings.map(listing => {
-            // Ensure user population happened correctly
-            const userExists = !!listing.user?._id;
-            return {
-                id: listing._id.toString(),
-                title: listing.title,
-                user: {
-                    id: userExists ? listing.user._id.toString() : '',
-                    name: userExists ? listing.user.name ?? 'Unknown User' : 'Unknown User',
-                    avatar: userExists ? listing.user.avatar : undefined,
-                },
-                description: listing.description,
-                image: getMainImageUrl(listing.images),
-                createdAt: listing.createdAt, // Include if needed
-                // status: listing.status, // Include if needed
-            };
-        });
+    // Convert to sections array
+    const sections = Object.entries(listingsByCategory).map(([category, items]) => ({
+        title: category.charAt(0).toUpperCase() + category.slice(1),
+        items
+    }));
 
-    } catch (error) {
-        console.error("[HOME PAGE] Error fetching listings:", error);
-        return []; // Return an empty array on error
-    }
-}
+    // Filter out sections that might be empty
+    const sectionsToShow = sections.filter(({ items }) => items.length > 0);
 
-// --- Home Page Server Component ---
-export default async function HomePage() {
+    return (
+        <div className="space-y-10 md:space-y-12 p-4 md:p-6 lg:p-8 max-w-full">
+            {/* Category Filter */}
+            <div className="flex justify-between items-center">
+                <h1 className="text-2xl md:text-3xl font-bold">Available Listings</h1>
+                <Select
+                    value={category}
+                    onValueChange={handleCategoryChange}
+                >
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="All Categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All Categories</SelectItem>
+                        <SelectItem value="produce">Produce</SelectItem>
+                        <SelectItem value="dairy">Dairy</SelectItem>
+                        <SelectItem value="bakery">Bakery</SelectItem>
+                        <SelectItem value="meat">Meat</SelectItem>
+                        <SelectItem value="pantry">Pantry</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
 
-  // Fetch all available listings when the page renders on the server
-  const allListings: FetchedListingData[] = await fetchAllAvailableListings(20); // Fetch up to 20 listings
-
-  // --- Basic Grouping (Example - replace with real logic later) ---
-  // For now, just display all fetched listings under one section.
-  // Real sections like "For you", "Near you" require more complex logic/data.
-  const sections = {
-      "Available Listings": allListings,
-      // Future sections would be populated based on different fetch logic
-      // "Near You": await fetchNearbyListings(userLocation, 8),
-      // "For You": await fetchPersonalizedListings(userId, 8),
-  };
-
-  // Filter out sections that might be empty
-  const sectionsToShow = Object.entries(sections).filter(([_, items]) => items.length > 0);
-
-  return (
-    // Add padding for better spacing
-    <div className="space-y-10 md:space-y-12 p-4 md:p-6 lg:p-8 max-w-full"> {/* Use max-w-full or specific container */}
-
-      {sectionsToShow.length === 0 ? (
-          // --- Display if no listings are found ---
-         <div className="text-center py-20">
-            <h2 className="text-2xl font-semibold text-muted-foreground">No available listings found right now.</h2>
-            <p className="text-muted-foreground mt-2">Why not be the first to share something?</p>
-            {/* Optional: Link to create page */}
-            {/* <Button asChild className="mt-4"><Link href="/create">Create a Listing</Link></Button> */}
-         </div>
-      ) : (
-          // --- Display listings grouped by section ---
-          sectionsToShow.map(([sectionTitle, items]) => (
-            <section key={sectionTitle}>
-              <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-5 border-b pb-2">{sectionTitle} ({items.length})</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                {items.map((item) => (
-                  // Render ProductCard with data fetched from DB
-                  <ProductCard
-                    key={item.id}
-                    id={item.id}
-                    title={item.title}
-                    user={item.user}
-                    description={item.description}
-                    image={item.image}
-                    createdAt={item.createdAt ?? new Date()}
-                  />
-                ))}
-              </div>
-            </section>
-          ))
-      )}
-    </div>
-  );
+            {isLoading ? (
+                <div className="text-center py-20">
+                    <p className="text-muted-foreground">Loading listings...</p>
+                </div>
+            ) : sectionsToShow.length === 0 ? (
+                <div className="text-center py-20">
+                    <h2 className="text-2xl font-semibold text-muted-foreground">No available listings found right now.</h2>
+                    <p className="text-muted-foreground mt-2">Why not be the first to share something?</p>
+                </div>
+            ) : (
+                sectionsToShow.map(({ title, items }) => (
+                    <section key={title}>
+                        <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-5 border-b pb-2">{title} ({items.length})</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                            {items.map((item) => (
+                                // Render ProductCard with data fetched from DB
+                                <ProductCard
+                                    key={item.id}
+                                    id={item.id}
+                                    title={item.title}
+                                    user={item.user}
+                                    description={item.description}
+                                    image={item.image}
+                                    createdAt={item.createdAt ?? new Date()}
+                                />
+                            ))}
+                        </div>
+                    </section>
+                ))
+            )}
+        </div>
+    );
 }
