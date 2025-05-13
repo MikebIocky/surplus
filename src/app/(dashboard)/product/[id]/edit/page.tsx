@@ -1,5 +1,3 @@
-"use client";
-
 import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import mongoose from 'mongoose';
@@ -10,8 +8,13 @@ import EditListingForm from './EditListingForm';
 // Force dynamic rendering and no caching
 export const dynamic = 'force-dynamic';
 
-export default function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id: listingId } = React.use(params);
+// Server Component to fetch data and authorize
+export default async function EditProductPage({
+  params,
+}: {
+  params: { id: string }
+}) {
+  const listingId = params.id;
 
   // 1. Validate ID format
   if (!mongoose.Types.ObjectId.isValid(listingId)) {
@@ -20,10 +23,10 @@ export default function EditProductPage({ params }: { params: Promise<{ id: stri
   }
 
   // 2. Fetch listing data and logged-in user concurrently
-  const [loggedInUserId, listingData] = React.use(Promise.all([
+  const [loggedInUserId, listingData] = await Promise.all([
     getUserIdFromCookieServer(),
     fetchListingDetails(listingId)
-  ]));
+  ]);
 
   // 3. Handle Listing Not Found
   if (!listingData) {
