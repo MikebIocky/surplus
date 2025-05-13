@@ -5,6 +5,8 @@ import mongoose from 'mongoose';
 import dbConnect from '@/lib/dbConnect';
 import Listing from '@/models/Listing';
 import { getUserIdFromCookieServer } from '@/lib/authUtils'; // Your auth helper
+import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
 // Import Cloudinary if needed for deleting old images
 // import { v2 as cloudinary } from 'cloudinary';
 
@@ -27,140 +29,140 @@ interface ErrorResponse { error: string; }
 
 // --- PUT Handler (for full updates, or use PATCH for partial) ---
 export async function PUT(
-    req: NextRequest,
-    { params }: { params: { id: string } } // Get listing ID from route params
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const listingId = params.id;
-    const loggedInUserId = await getUserIdFromCookieServer();
-
-    // 1. Check Authentication
-    if (!loggedInUserId) {
-        return NextResponse.json<ErrorResponse>({ error: 'Authentication required' }, { status: 401 });
-    }
-
-    // 2. Validate Listing ID Format
-    if (!mongoose.Types.ObjectId.isValid(listingId)) {
-        return NextResponse.json<ErrorResponse>({ error: 'Invalid listing ID format' }, { status: 400 });
-    }
-
-    // 3. Parse Request Body
-    let updateData: UpdateListingRequestBody;
     try {
-        updateData = await req.json();
-    } catch {
-        return NextResponse.json<ErrorResponse>({ error: 'Invalid request body' }, { status: 400 });
-    }
+        const resolvedParams = await params;
+        const { id: listingId } = resolvedParams;
 
-    // Basic validation on update data (can be more specific)
-    if (!updateData.title || !updateData.description || !updateData.quantity || !updateData.location) {
-         return NextResponse.json<ErrorResponse>({ error: 'Missing required fields: title, description, quantity, location' }, { status: 400 });
-    }
+        // Get the current user's ID from the JWT token
+        const cookieStore = await cookies();
+        const token = cookieStore.get('authToken')?.value;
 
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-    try {
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+        const { payload } = await jwtVerify(token, secret);
+        const userId = (payload as { user?: { id?: string } }).user?.id;
+
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(listingId)) {
+            return NextResponse.json({ error: 'Invalid listing ID' }, { status: 400 });
+        }
+
         await dbConnect();
-
-        // 4. Find the Listing to Update
         const listing = await Listing.findById(listingId);
 
         if (!listing) {
-            return NextResponse.json<ErrorResponse>({ error: 'Listing not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
         }
 
-        // 5. Authorization Check: Ensure logged-in user owns the listing
-        if (listing.user.toString() !== loggedInUserId) {
-            console.warn(`[API UPDATE] Unauthorized attempt: User ${loggedInUserId} tried to update listing ${listingId} owned by ${listing.user.toString()}`);
-            return NextResponse.json<ErrorResponse>({ error: 'Forbidden: You do not own this listing' }, { status: 403 });
+        if (listing.user.toString() !== userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
         }
 
-        // 6. Update Listing Fields
-        listing.title = updateData.title;
-        listing.description = updateData.description;
-        listing.quantity = updateData.quantity;
-        listing.location = updateData.location;
-        listing.contact = updateData.contact ?? undefined; // Set to undefined if null/empty
-        listing.expiryDate = updateData.expiryDate ? new Date(updateData.expiryDate) : undefined; // Convert date string, set undefined if null/empty
+        const body = await request.json();
+        const updatedListing = await Listing.findByIdAndUpdate(
+            listingId,
+            { $set: body },
+            { new: true }
+        ).populate('user', 'name avatar');
 
-        // Update images if new ones were provided
-        if (updateData.images && updateData.images.length > 0) {
-            listing.images = updateData.images;
-        }
-        // You might want to update status separately via a different endpoint/logic
-
-        // 7. Save Updated Listing
-        await listing.save();
-
-        console.log(`[API UPDATE] Listing ${listingId} updated successfully by user ${loggedInUserId}`);
-        return NextResponse.json<SuccessResponse>(
-            { message: 'Listing updated successfully', listingId: listing._id.toString() },
-            { status: 200 }
+        return NextResponse.json(updatedListing);
+    } catch (error) {
+        console.error('Error updating listing:', error);
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
         );
-
-    } catch {
-        console.error('DB Connection Error');
-        throw new Error('DB Connection Error');
     }
 }
 
 // GET handler to fetch a single listing
 export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    await dbConnect();
-    const listing = await Listing.findById(params.id)
-      .populate('user', 'name email')
-      .lean();
+    try {
+        const resolvedParams = await params;
+        const { id: listingId } = resolvedParams;
 
-    if (!listing) {
-      return NextResponse.json(
-        { error: 'Listing not found' },
-        { status: 404 }
-      );
+        if (!mongoose.Types.ObjectId.isValid(listingId)) {
+            return NextResponse.json({ error: 'Invalid listing ID' }, { status: 400 });
+        }
+
+        await dbConnect();
+        const listing = await Listing.findById(listingId)
+            .populate('user', 'name avatar')
+            .lean();
+
+        if (!listing) {
+            return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
+        }
+
+        return NextResponse.json(listing);
+    } catch (error) {
+        console.error('Error fetching listing:', error);
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        );
     }
-
-    return NextResponse.json(listing);
-  } catch (error) {
-    console.error('Get listing error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch listing' },
-      { status: 500 }
-    );
-  }
 }
 
 // DELETE handler to remove a listing
 export async function DELETE(
-  req: NextRequest,
-  { params }: { params: { id: string } }
+    request: NextRequest,
+    { params }: { params: Promise<{ id: string }> }
 ) {
-  try {
-    await dbConnect();
-    const userId = await getUserIdFromCookieServer();
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-    }
+    try {
+        const resolvedParams = await params;
+        const { id: listingId } = resolvedParams;
 
-    // Find the listing and check ownership
-    const listing = await Listing.findById(params.id);
-    
-    if (!listing) {
-      return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
-    }
+        // Get the current user's ID from the JWT token
+        const cookieStore = await cookies();
+        const token = cookieStore.get('authToken')?.value;
 
-    // Check if the user is the owner
-    if (listing.user.toString() !== userId) {
-      return NextResponse.json({ error: 'Not authorized to delete this listing' }, { status: 403 });
-    }
+        if (!token) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-    // Delete the listing
-    await listing.deleteOne();
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+        const { payload } = await jwtVerify(token, secret);
+        const userId = (payload as { user?: { id?: string } }).user?.id;
 
-    return NextResponse.json({ message: 'Listing deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting listing:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+        if (!userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        if (!mongoose.Types.ObjectId.isValid(listingId)) {
+            return NextResponse.json({ error: 'Invalid listing ID' }, { status: 400 });
+        }
+
+        await dbConnect();
+        const listing = await Listing.findById(listingId);
+
+        if (!listing) {
+            return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
+        }
+
+        if (listing.user.toString() !== userId) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+        }
+
+        await Listing.findByIdAndDelete(listingId);
+        return NextResponse.json({ message: 'Listing deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting listing:', error);
+        return NextResponse.json(
+            { error: 'Internal server error' },
+            { status: 500 }
+        );
     }
 }
