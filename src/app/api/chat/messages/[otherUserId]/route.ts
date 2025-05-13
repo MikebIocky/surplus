@@ -3,9 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/dbConnect';
-import Conversation from '@/models/Conversation';
 import Message from '@/models/Message';
-import User from '@/models/User';
 import mongoose from 'mongoose';
 
 export async function GET(
