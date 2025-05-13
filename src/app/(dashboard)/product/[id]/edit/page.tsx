@@ -8,13 +8,9 @@ import EditListingForm from './EditListingForm';
 // Force dynamic rendering and no caching
 export const dynamic = 'force-dynamic';
 
-type PageProps = {
-  params: Promise<{ id: string }>
-}
-
 // Server Component to fetch data and authorize
-export default async function EditProductPage({ params }: PageProps) {
-  const { id: listingId } = await params;
+export default async function EditProductPage({ params }: { params: { id: string } }) {
+  const listingId = params.id;
 
     // 1. Validate ID format
     if (!mongoose.Types.ObjectId.isValid(listingId)) {
