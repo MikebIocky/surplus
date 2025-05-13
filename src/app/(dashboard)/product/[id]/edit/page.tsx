@@ -9,11 +9,10 @@ import EditForm from './EditForm';
 export const dynamic = 'force-dynamic';
 
 // Server Component to fetch data and authorize
-export default async function EditProductPage({
-  params,
-}: {
-  params: { id: string }
+export default async function EditProductPage(props: {
+  params: Promise<{ id: string }>;
 }) {
+  const params = await props.params;
   const listingId = params.id;
 
   // 1. Validate ID format
