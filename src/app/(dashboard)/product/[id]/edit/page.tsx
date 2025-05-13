@@ -1,5 +1,3 @@
-// src/app/product/[id]/edit/page.tsx
-
 import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import mongoose from 'mongoose';
@@ -10,8 +8,13 @@ import EditListingForm from './EditListingForm';
 // Force dynamic rendering and no caching
 export const dynamic = 'force-dynamic';
 
+type PageProps = {
+  params: { id: string }
+  searchParams: Record<string, string | string[] | undefined>
+}
+
 // Server Component to fetch data and authorize
-export default async function EditProductPage({ params }: { params: { id: string } }) {
+export default async function EditProductPage({ params }: PageProps) {
     const listingId = params.id;
 
     // 1. Validate ID format
@@ -56,4 +59,4 @@ export default async function EditProductPage({ params }: { params: { id: string
             }} />
         </div>
     );
-}
+} 
