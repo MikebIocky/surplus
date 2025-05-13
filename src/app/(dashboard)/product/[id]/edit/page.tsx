@@ -8,8 +8,13 @@ import EditListingForm from './EditListingForm';
 // Force dynamic rendering and no caching
 export const dynamic = 'force-dynamic';
 
+type Props = {
+  params: { id: string }
+  searchParams: { [key: string]: string | string[] | undefined }
+}
+
 // Server Component to fetch data and authorize
-export default async function EditProductPage({ params }: { params: { id: string } }) {
+export default async function EditProductPage({ params }: Props) {
   const listingId = params.id;
 
     // 1. Validate ID format
