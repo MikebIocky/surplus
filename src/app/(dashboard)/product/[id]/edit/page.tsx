@@ -8,6 +8,19 @@ import EditListingForm from './EditListingForm';
 // Force dynamic rendering and no caching
 export const dynamic = 'force-dynamic';
 
+// Client Component for the form
+"use client";
+function EditForm({ listing }: { listing: any }) {
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <h1 className="text-2xl md:text-3xl font-bold border-b pb-3 mb-6">
+        Edit Listing: <span className="font-medium">{listing.title}</span>
+      </h1>
+      <EditListingForm listing={listing} />
+    </div>
+  );
+}
+
 // Server Component to fetch data and authorize
 export default async function EditProductPage({
   params,
@@ -41,21 +54,16 @@ export default async function EditProductPage({
   }
 
   // 5. Pass data to the Client Component Form
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <h1 className="text-2xl md:text-3xl font-bold border-b pb-3 mb-6">
-        Edit Listing: <span className="font-medium">{listingData.title}</span>
-      </h1>
-      <EditListingForm listing={{
-        _id: listingData.id,
-        title: listingData.title,
-        description: listingData.description,
-        quantity: listingData.details.quantity || '',
-        location: listingData.details.location || '',
-        images: listingData.image ? [{ url: listingData.image, publicId: listingData.imagePublicId || '' }] : [],
-        expiryDate: listingData.details.expiryDate ? new Date(listingData.details.expiryDate).toISOString().split('T')[0] : null,
-        contact: listingData.details.contact || null
-      }} />
-    </div>
-  );
+  const listing = {
+    _id: listingData.id,
+    title: listingData.title,
+    description: listingData.description,
+    quantity: listingData.details.quantity || '',
+    location: listingData.details.location || '',
+    images: listingData.image ? [{ url: listingData.image, publicId: listingData.imagePublicId || '' }] : [],
+    expiryDate: listingData.details.expiryDate ? new Date(listingData.details.expiryDate).toISOString().split('T')[0] : null,
+    contact: listingData.details.contact || null
+  };
+
+  return <EditForm listing={listing} />;
 }
