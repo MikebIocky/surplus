@@ -52,51 +52,55 @@ function convertStatus(status: string | undefined): "Available" | "Picking Up" |
 }
 
 // --- Page Component ---
-export default async function ProductPage({ params }: { params: { id: string } }) {
-    // 1. Get user ID from cookie
-    const userId = await getUserIdFromCookieServer();
-    if (!userId) {
-        redirect('/log-in');
-    }
+export default async function ProductPage(props: {
+  params: Promise<{ id: string }>;
+}) {
+  const params = await props.params;
+  const productId = params.id;
 
-    // 2. Validate product ID format
-    const productId = params.id;
-    if (!mongoose.Types.ObjectId.isValid(productId)) {
-        notFound();
-    }
+  // 1. Get user ID from cookie
+  const userId = await getUserIdFromCookieServer();
+  if (!userId) {
+    redirect('/log-in');
+  }
 
-    // 3. Fetch listing details
-    console.log('[FETCH LISTING DETAILS] Fetching details for listing ID:', productId);
-    const listingData = await fetchListingDetails(productId);
-    if (!listingData) {
-        notFound();
-    }
-    console.log('[FETCH LISTING DETAILS] Successfully fetched and mapped data for listing ID:', productId);
+  // 2. Validate product ID format
+  if (!mongoose.Types.ObjectId.isValid(productId)) {
+    notFound();
+  }
 
-    // 4. Fetch recommended items
-    console.log('[FETCH RECOMMENDED] Fetching recommendations for user', userId, 'excluding', productId);
-    const recommendedItemsRaw = await fetchRecommendedListings(userId, productId);
-    const recommendedItems = recommendedItemsRaw.map(item => ({
-        ...item,
-        description: 'No description available'
-    }));
-    console.log('[FETCH RECOMMENDED] Found', recommendedItems.length, 'recommendations.');
+  // 3. Fetch listing details
+  console.log('[FETCH LISTING DETAILS] Fetching details for listing ID:', productId);
+  const listingData = await fetchListingDetails(productId);
+  if (!listingData) {
+    notFound();
+  }
+  console.log('[FETCH LISTING DETAILS] Successfully fetched and mapped data for listing ID:', productId);
 
-    // 5. Check if current user is the owner
-    const isOwner = listingData.user.id === userId;
-    console.log('[ProductPage] Viewing listing', productId + '. isOwner =', isOwner, '(Viewer:', userId, ', Poster:', listingData.user.id + ')');
+  // 4. Fetch recommended items
+  console.log('[FETCH RECOMMENDED] Fetching recommendations for user', userId, 'excluding', productId);
+  const recommendedItemsRaw = await fetchRecommendedListings(userId, productId);
+  const recommendedItems = recommendedItemsRaw.map(item => ({
+    ...item,
+    description: 'No description available'
+  }));
+  console.log('[FETCH RECOMMENDED] Found', recommendedItems.length, 'recommendations.');
 
-    // 6. Convert status to the correct type
-    const status = convertStatus(listingData.status);
+  // 5. Check if current user is the owner
+  const isOwner = listingData.user.id === userId;
+  console.log('[ProductPage] Viewing listing', productId + '. isOwner =', isOwner, '(Viewer:', userId, ', Poster:', listingData.user.id + ')');
 
-    return (
-        <div className="container mx-auto px-4 py-8">
-            <ProductDetail
-                {...listingData}
-                status={status}
-                recommended={recommendedItems}
-                isOwner={isOwner}
-            />
-        </div>
-    );
+  // 6. Convert status to the correct type
+  const status = convertStatus(listingData.status);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <ProductDetail
+        {...listingData}
+        status={status}
+        recommended={recommendedItems}
+        isOwner={isOwner}
+      />
+    </div>
+  );
 }
