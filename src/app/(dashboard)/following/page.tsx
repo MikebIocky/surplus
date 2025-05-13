@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-import mongoose from 'mongoose';
 import User from '@/models/User';
 import { UserProfileDisplay } from '@/components/UserProfileDisplay';
 
@@ -13,7 +12,7 @@ async function getLoggedInUserId() {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
   try {
     const { payload } = await jwtVerify(token, secret);
-    return (payload as any).user?.id as string;
+    return (payload as { user?: { id?: string } }).user?.id as string;
   } catch (error) {
     return null;
   }
@@ -50,22 +49,24 @@ export default async function FollowingPage() {
         <p>You are not following anyone yet.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {user.following.map((followedUser: any) => (
-            <UserProfileDisplay
-              key={followedUser._id.toString()}
-              user={{
-                id: followedUser._id.toString(),
-                name: followedUser.name,
-                email: followedUser.email,
-                avatar: followedUser.avatar,
-                description: followedUser.description || '',
-                rating: followedUser.rating || 0,
-                createdAt: followedUser.createdAt,
-                updatedAt: followedUser.updatedAt,
-              }}
-              isFollowing={true}
-            />
-          ))}
+          {(user.following as any[])
+            .filter((f) => typeof f === 'object' && f !== null && 'name' in f && 'email' in f)
+            .map((followedUser) => (
+              <UserProfileDisplay
+                key={followedUser._id.toString()}
+                user={{
+                  id: followedUser._id.toString(),
+                  name: followedUser.name,
+                  email: followedUser.email,
+                  avatar: followedUser.avatar,
+                  description: followedUser.description || '',
+                  rating: followedUser.rating || 0,
+                  createdAt: followedUser.createdAt,
+                  updatedAt: followedUser.updatedAt,
+                }}
+                isFollowing={true}
+              />
+            ))}
         </div>
       )}
     </div>

@@ -7,7 +7,15 @@ import Message from '@/models/Message'; // Import Message to populate lastMessag
 import { getUserIdFromRequest } from '@/lib/authUtils'; // Your helper to get user ID from cookie/token
 
 function isObjectWithId(val: unknown): val is { _id: { toString: () => string } } {
-  return typeof val === 'object' && val !== null && '_id' in val && typeof (val as any)._id === 'object' && (val as any)._id !== null && 'toString' in (val as any)._id;
+  if (typeof val !== 'object' || val === null || !('_id' in val)) return false;
+  const id = (val as { _id?: unknown })._id;
+  return typeof id === 'object' && id !== null && 'toString' in id;
+}
+
+function isSenderObject(val: unknown): val is { _id: { toString: () => string } } {
+  if (typeof val !== 'object' || val === null || !('_id' in val)) return false;
+  const id = (val as { _id?: unknown })._id;
+  return typeof id === 'object' && id !== null && 'toString' in id;
 }
 
 export async function GET(req: NextRequest) {
@@ -54,13 +62,8 @@ export async function GET(req: NextRequest) {
                     sender: lastMsg.sender,
                     createdAt: lastMsg.createdAt,
                     isOwn:
-                        typeof lastMsg.sender === 'object' &&
-                        lastMsg.sender !== null &&
-                        '_id' in lastMsg.sender &&
-                        typeof (lastMsg.sender as any)._id === 'object' &&
-                        (lastMsg.sender as any)._id !== null &&
-                        'toString' in (lastMsg.sender as any)._id
-                            ? (lastMsg.sender as { _id: { toString: () => string } })._id.toString() === userId
+                        isSenderObject(lastMsg.sender)
+                            ? lastMsg.sender._id.toString() === userId
                             : lastMsg.sender === userId,
                 } : null,
                 updatedAt: convo.updatedAt,
