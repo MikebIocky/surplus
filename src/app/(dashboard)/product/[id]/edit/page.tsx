@@ -3,8 +3,7 @@
 import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import mongoose from 'mongoose';
-// --- CORRECTED IMPORT ---
-import { getUserIdFromCookieServer } from '@/lib/authUtils'; // Use the correct exported name
+import { getUserIdFromCookieServer } from '@/lib/authUtils';
 import { fetchListingDetails } from '@/lib/dataFetch';
 import EditListingForm from './EditListingForm';
 
@@ -22,9 +21,8 @@ export default async function EditProductPage({ params }: { params: { id: string
     }
 
     // 2. Fetch listing data and logged-in user concurrently
-    // --- USE CORRECT IMPORTED FUNCTION NAME ---
     const [loggedInUserId, listingData] = await Promise.all([
-        getUserIdFromCookieServer(), // Call the correctly imported function
+        getUserIdFromCookieServer(),
         fetchListingDetails(listingId)
     ]);
 
@@ -44,7 +42,7 @@ export default async function EditProductPage({ params }: { params: { id: string
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
             <h1 className="text-2xl md:text-3xl font-bold border-b pb-3 mb-6">
-                Edit Listing: <span className="font-medium">{listingData.title}</span> {/* Use title */}
+                Edit Listing: <span className="font-medium">{listingData.title}</span>
             </h1>
             <EditListingForm listing={{
                 _id: listingData.id,
