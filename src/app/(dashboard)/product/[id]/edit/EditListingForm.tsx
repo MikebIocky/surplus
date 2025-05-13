@@ -36,26 +36,10 @@ interface EditListingFormProps {
   };
 }
 
-const CLOUDINARY_UPLOAD_PRESET = 'YOUR_UPLOAD_PRESET'; // Set this in your Cloudinary dashboard
-const CLOUDINARY_CLOUD_NAME = 'duum4hag5'; // Your cloud name
-
-async function uploadImageToCloudinary(file: File) {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
-
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
-    { method: 'POST', body: formData }
-  );
-  const data = await res.json();
-  return { url: data.secure_url, publicId: data.public_id };
-}
-
 export default function EditListingForm({ listing }: EditListingFormProps) {
   const router = useRouter();
   const { toast } = useToast();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { isLoading: isAuthLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form State
@@ -453,8 +437,9 @@ export default function EditListingForm({ listing }: EditListingFormProps) {
                 type="button"
                 onClick={() => setError(null)}
                 className="ml-auto text-destructive hover:text-destructive/80 text-lg leading-none flex-shrink-0"
+                aria-label="Close error"
               >
-                ×
+                &apos;
               </button>
             </div>
           )}

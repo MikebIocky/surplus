@@ -118,8 +118,7 @@ export async function DELETE(
     } finally {
       session.endSession();
     }
-  } catch (error) {
-    console.error('Unfollow error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to unfollow user' },
       { status: 500 }

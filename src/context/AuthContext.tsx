@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false); // Finished check
       console.log("[AuthContext CHECK] Finished. isLoading:", false, "User:", user ? user.id : null);
     }
-  }, [/* no dependencies needed here unless endpoint changes */]); // Ensure stable function reference
+  }, [user]); // Add 'user' as dependency
 
 
   // --- Effect to check auth state on initial client mount ---
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     // Redirect after clearing state and attempting API call
     router.push('/log-in');
-  }, [router, user]);
+  }, [router]); // Remove 'user' from dependency array
 
 
   // --- Provide Context Value ---
