@@ -424,7 +424,7 @@ export default function EditListingForm({ listing }: EditListingFormProps) {
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              Only provide if you're comfortable sharing it publicly.
+              Only provide if you&apos;re comfortable sharing it publicly.
             </p>
           </div>
 

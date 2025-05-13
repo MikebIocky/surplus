@@ -15,7 +15,7 @@ async function getLoggedInUserId() {
   try {
     const { payload } = await jwtVerify(token, secret);
     return (payload as { user?: { id?: string } }).user?.id as string;
-  } catch (error) {
+  } catch {
     return null;
   }
 }
