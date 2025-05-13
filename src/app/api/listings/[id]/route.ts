@@ -47,7 +47,7 @@ export async function PUT(
     let updateData: UpdateListingRequestBody;
     try {
         updateData = await req.json();
-    } catch (e) {
+    } catch {
         return NextResponse.json<ErrorResponse>({ error: 'Invalid request body' }, { status: 400 });
     }
 
@@ -96,12 +96,8 @@ export async function PUT(
             { status: 200 }
         );
 
-    } catch (error) {
+    } catch {
         console.error('DB Connection Error');
-        if (error instanceof Error && (error as { name?: string }).name === 'ValidationError') {
-            const messages = Object.values((error as unknown as { errors: Record<string, { message: string }> }).errors).map((err) => err.message);
-            return NextResponse.json<ErrorResponse>({ error: `Validation failed: ${messages.join(', ')}` }, { status: 400 });
-        }
         throw new Error('DB Connection Error');
     }
 }

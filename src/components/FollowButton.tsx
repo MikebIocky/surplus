@@ -30,7 +30,7 @@ export default function FollowButton({ userId, initialIsFollowing }: FollowButto
         title: isFollowing ? 'Unfollowed' : 'Following',
         description: isFollowing ? 'You have unfollowed this user' : 'You are now following this user',
       });
-    } catch (error) {
+    } catch {
       toast({
         title: 'Error',
         description: 'Failed to update follow status',

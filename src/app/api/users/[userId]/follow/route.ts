@@ -67,8 +67,7 @@ export async function POST(
     } finally {
       session.endSession();
     }
-  } catch (error) {
-    console.error('Follow error:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to follow user' },
       { status: 500 }
