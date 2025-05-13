@@ -25,11 +25,14 @@ export async function GET(req: NextRequest) {
       pendingClaim: listing.pendingClaim
         ? {
             user: listing.pendingClaim.user
-              ? {
-                  id: listing.pendingClaim.user._id?.toString?.() || listing.pendingClaim.user.toString(),
-                  name: (listing.pendingClaim.user as any).name || '',
-                  avatar: (listing.pendingClaim.user as any).avatar || ''
-                }
+              ? (() => {
+                  const u = listing.pendingClaim.user as unknown as { name?: string; avatar?: string; _id?: string };
+                  return {
+                    id: u._id?.toString?.() || listing.pendingClaim.user.toString(),
+                    name: u.name || '',
+                    avatar: u.avatar || ''
+                  };
+                })()
               : null,
             requestedAt: listing.pendingClaim.requestedAt
           }

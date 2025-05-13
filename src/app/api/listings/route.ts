@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         await dbConnect();
 
         // Build the query
-        let query: any = { status: { $in: ['available', 'pending'] } };
+        const query: Record<string, unknown> = { status: { $in: ['available', 'pending'] } };
         if (category && category !== 'all') {
             query.category = category;
         }
