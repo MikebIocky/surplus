@@ -192,7 +192,7 @@ async function getLoggedInUserId(): Promise<string | null> {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
     try {
         const { payload } = await jwtVerify(token, secret);
-        return (payload as any).user?.id as string;
+        return (payload as { user?: { id?: string } }).user?.id as string;
     } catch (error) {
         // Log specific JWT errors for easier debugging
         if (error instanceof jwt.TokenExpiredError) {

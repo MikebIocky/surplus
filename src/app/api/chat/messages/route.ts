@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
         // Find or create conversation
         const participants = [senderId, receiverId].sort();
-        let conversation = await Conversation.findOneAndUpdate(
+        const conversation = await Conversation.findOneAndUpdate(
             { participants },
             { $set: { participants } },
             { upsert: true, new: true }

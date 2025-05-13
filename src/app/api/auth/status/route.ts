@@ -1,5 +1,5 @@
 // src/app/api/auth/status/route.ts
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers'; // Use next/headers for reading cookies in Route Handlers
 import { jwtVerify, JWTPayload } from 'jose';
 import mongoose from 'mongoose';

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
       return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
 
-    let listing = await Listing.findById(id);
+    const listing = await Listing.findById(id);
     if (!listing) {
       return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
     }

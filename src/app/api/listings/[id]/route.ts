@@ -97,12 +97,12 @@ export async function PUT(
         );
 
     } catch (error) {
-        console.error(`[API UPDATE] Error updating listing ${listingId}:`, error);
-         if (error instanceof Error && (error as any).name === 'ValidationError') {
-            const messages = Object.values((error as any).errors).map((err: any) => err.message);
+        console.error('DB Connection Error');
+        if (error instanceof Error && (error as { name?: string }).name === 'ValidationError') {
+            const messages = Object.values((error as unknown as { errors: Record<string, { message: string }> }).errors).map((err) => err.message);
             return NextResponse.json<ErrorResponse>({ error: `Validation failed: ${messages.join(', ')}` }, { status: 400 });
-         }
-        return NextResponse.json<ErrorResponse>({ error: 'Failed to update listing' }, { status: 500 });
+        }
+        throw new Error('DB Connection Error');
     }
 }
 
