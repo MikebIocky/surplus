@@ -49,8 +49,17 @@ export default async function FollowingPage() {
         <p>You are not following anyone yet.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(user.following as any[])
-            .filter((f) => typeof f === 'object' && f !== null && 'name' in f && 'email' in f)
+          {(user.following as unknown[])
+            .filter((f): f is {
+              _id: { toString: () => string };
+              name: string;
+              email: string;
+              avatar?: string;
+              description?: string;
+              rating?: number;
+              createdAt: Date;
+              updatedAt: Date;
+            } => typeof f === 'object' && f !== null && 'name' in f && 'email' in f)
             .map((followedUser) => (
               <UserProfileDisplay
                 key={followedUser._id.toString()}
