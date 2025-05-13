@@ -7,8 +7,6 @@ import Link from 'next/link';
 import { Home, Clock, Users, ShoppingBag, Plus, User, ChevronDown, LogOut, LogIn, Settings, FileText, Bell, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from "@/components/ui/use-toast";
-import { useRouter } from "next/navigation";
 
 // --- UI Imports ---
 import {
@@ -122,7 +120,6 @@ function NotificationBell() {
 // --- Main Component ---
 export function AppSidebar() {
   const { user, logout, isLoading } = useAuth();
-  const router = useRouter();
 
   React.useEffect(() => {
       console.log("[AppSidebar EFFECT] Auth State Update:", { isLoading, userId: user?.id });

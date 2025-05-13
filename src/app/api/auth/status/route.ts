@@ -39,7 +39,7 @@ if (JWT_SECRET) {
 async function verifyTokenAndGetUserId(token: string): Promise<string | null> {
     if (!secretKey) return null; // Can't verify if secret isn't ready
     try {
-        const { payload } = await jwtVerify(token, secretKey) as { payload: JWTPayload & { user?: { id?: string } } };
+        const { payload } = await jwtVerify(token, secretKey) as { payload: JWTPayload & { user?: { id?: string } } }
         return payload?.user?.id || null;
     } catch (error) {
         console.warn("[API STATUS] Token verification failed:", error instanceof Error ? error.message : "Unknown error");
@@ -48,7 +48,7 @@ async function verifyTokenAndGetUserId(token: string): Promise<string | null> {
 }
 
 // --- GET Handler ---
-export async function GET(req: NextRequest) {
+export async function GET() {
     // Check if secret key was successfully generated
     if (!secretKey) {
         return NextResponse.json<ErrorResponse>({ error: 'Server configuration error' }, { status: 503 });

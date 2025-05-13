@@ -43,7 +43,7 @@ export function ProductCard({
   image,
   createdAt,
   user,
-  location,
+  // location,
 }: ProductCardProps) {
   const handleCardClick = () => {
     console.log(`ProductCard clicked: ${id}, ${title}`);
@@ -168,7 +168,7 @@ export function RateUserModal({ userId, onClose, onRated }: RateUserModalProps) 
         className="w-full border rounded p-2 mt-2"
         placeholder="Optional comment"
         value=""
-        onChange={e => {}}
+        onChange={() => {}}
       />
       <button type="submit" className="mt-2 btn btn-primary" disabled={loading}>
         {loading ? "Submitting..." : "Submit"}

@@ -156,9 +156,9 @@ export default function ChatPage() {
              setMessages(prev => [...prev, { ...createdMessage, isOwn: true }]);
              scrollToBottom(); // Scroll after sending
 
-        } catch (err: any) {
+        } catch (err) {
             console.error("ChatPage: Send message error:", err);
-            setError(err.message);
+            setError(err instanceof Error ? err.message : String(err));
             setNewMessage(contentToSend); // Put message back in input on error
         } finally {
             setIsSending(false);

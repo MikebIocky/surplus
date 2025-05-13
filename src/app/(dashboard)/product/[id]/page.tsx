@@ -13,7 +13,7 @@ import {
 } from "@/lib/dataFetch";
 
 // --- UI Components ---
-import { ProductDetail, ProductDetailProps } from "@/components/ProductDetail"; // Import props type too
+import { ProductDetail } from "@/components/ProductDetail";
 
 // --- Server Component Configuration ---
 export const dynamic = 'force-dynamic'; // Ensure fresh data

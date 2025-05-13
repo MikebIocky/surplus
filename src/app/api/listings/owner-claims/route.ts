@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Listing from '@/models/Listing';
 import { getUserIdFromCookieServer } from '@/lib/authUtils';

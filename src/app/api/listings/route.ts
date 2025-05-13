@@ -25,9 +25,9 @@ export async function GET(request: Request) {
 
         // Transform the data to match the expected format
         const transformedListings = listings.map(listing => {
-            let userId = listing.user._id?.toString?.() || listing.user.toString();
-            let userName = typeof listing.user === 'object' && 'name' in listing.user ? (listing.user as { name?: string }).name || "" : "";
-            let userAvatar = typeof listing.user === 'object' && 'avatar' in listing.user ? (listing.user as { avatar?: string }).avatar || "" : "";
+            const userId = listing.user._id?.toString?.() || listing.user.toString();
+            const userName = typeof listing.user === 'object' && 'name' in listing.user ? (listing.user as { name?: string }).name || "" : "";
+            const userAvatar = typeof listing.user === 'object' && 'avatar' in listing.user ? (listing.user as { avatar?: string }).avatar || "" : "";
             return {
                 id: listing._id.toString(),
                 title: listing.title,

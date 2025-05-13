@@ -21,32 +21,6 @@ interface UserProfile {
     rating?: number;
 }
 
-// --- Mock Data & API Functions (Replace with actual logic) ---
-// Represents fetching the current logged-in user's data
-async function fetchCurrentUserProfile() {
-    console.log("API CALL: Fetching current user profile...");
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-    // !! Replace with your actual API call and authentication logic !!
-    return {
-        id: "currentUser123",
-        name: "Mike B",
-        email: "mike.b@example.com", // Usually non-editable or handled differently
-        avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?&w=128&h=128&fit=facearea&q=80",
-        description: "Passionate about reducing food waste! Sharing surplus goodies.",
-    };
-}
-
-// Represents updating the user's profile
-async function updateUserProfile(data: { name: string; description: string }): Promise<boolean> {
-    console.log("API CALL: Updating user profile...", data);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-    // !! Replace with your actual API call !!
-    // Example: const response = await fetch('/api/user/profile', { method: 'PUT', body: JSON.stringify(data), ... })
-    // return response.ok;
-    return true; // Assume success for mock
-}
-// --- End Mock Data & API Functions ---
-
 export default function SettingsPage() {
     const router = useRouter();
     const { toast } = useToast();

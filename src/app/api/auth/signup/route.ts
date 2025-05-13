@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     console.error('Signup API Error:', error);
     // Handle specific Mongoose validation errors
      if (error instanceof mongoose.Error.ValidationError) {
-       const messages = Object.values(error.errors).map((err: any) => err.message);
+       const messages = Object.values((error as { errors: Record<string, { message: string }> }).errors).map((err) => err.message);
        return NextResponse.json<ErrorResponse>({ error: `Validation failed: ${messages.join(', ')}` }, { status: 400 });
      }
      return NextResponse.json<ErrorResponse>({ error: 'An internal server error occurred' }, { status: 500 });

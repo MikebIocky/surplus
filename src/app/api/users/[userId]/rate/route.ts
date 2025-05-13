@@ -39,25 +39,28 @@ export async function POST(
   const user = await User.findById(userId);
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-  if (!(user as any).ratings) {
-    (user as any).ratings = [];
+  type Rating = { from: string; value: number; comment: string; createdAt: Date };
+  type UserWithRatings = typeof user & { ratings: Rating[]; averageRating: number };
+  const userWithRatings = user as UserWithRatings;
+  if (!userWithRatings.ratings) {
+    userWithRatings.ratings = [];
   }
 
   // Prevent duplicate ratings from the same user (optional: allow updating)
-  const existing = (user as any).ratings.find((r: any) => r.from.toString() === raterId);
+  const existing = userWithRatings.ratings.find((r) => r.from.toString() === raterId);
   if (existing) {
     existing.value = valueNumber;
     existing.comment = comment;
     existing.createdAt = new Date();
   } else {
-    (user as any).ratings.push({ from: raterId, value: valueNumber, comment, createdAt: new Date() });
+    userWithRatings.ratings.push({ from: raterId, value: valueNumber, comment, createdAt: new Date() });
   }
 
   // Update average rating
-  (user as any).averageRating =
-    (user as any).ratings.reduce((sum: number, r: any) => sum + r.value, 0) / (user as any).ratings.length;
+  userWithRatings.averageRating =
+    userWithRatings.ratings.reduce((sum, r) => sum + r.value, 0) / userWithRatings.ratings.length;
 
   await user.save();
 
-  return NextResponse.json({ message: 'Rating submitted', averageRating: (user as any).averageRating });
+  return NextResponse.json({ message: 'Rating submitted', averageRating: userWithRatings.averageRating });
 }

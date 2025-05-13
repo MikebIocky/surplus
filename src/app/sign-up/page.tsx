@@ -82,9 +82,9 @@ export default function SignUpPage() {
         // setTimeout(() => router.push('/log-in'), 3000);
       }
 
-    } catch (err: any) {
+    } catch (err) {
       console.error("Sign Up Error:", err);
-      setError(err.message || "An unknown error occurred during sign up.");
+      setError(err instanceof Error ? err.message : "An unknown error occurred during sign up.");
       setIsLoading(false); // Stop loading on error
       setSuccessMessage(null);
     }
