@@ -5,7 +5,7 @@ import Message from '@/models/Message';
 import { getUserIdFromCookieServer } from '@/lib/authUtils';
 
 // GET handler to fetch conversations
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const userId = await getUserIdFromCookieServer();
     if (!userId) {

@@ -24,19 +24,24 @@ export async function GET(request: Request) {
             .lean();
 
         // Transform the data to match the expected format
-        const transformedListings = listings.map(listing => ({
-            id: listing._id.toString(),
-            title: listing.title,
-            user: {
-                id: listing.user._id?.toString?.() || listing.user.toString(),
-                name: (listing.user as any).name || "",
-                avatar: (listing.user as any).avatar || ""
-            },
-            description: listing.description,
-            image: listing.images?.[0]?.url, // Get the first image URL if available
-            createdAt: listing.createdAt,
-            category: listing.category
-        }));
+        const transformedListings = listings.map(listing => {
+            let userId = listing.user._id?.toString?.() || listing.user.toString();
+            let userName = typeof listing.user === 'object' && 'name' in listing.user ? (listing.user as { name?: string }).name || "" : "";
+            let userAvatar = typeof listing.user === 'object' && 'avatar' in listing.user ? (listing.user as { avatar?: string }).avatar || "" : "";
+            return {
+                id: listing._id.toString(),
+                title: listing.title,
+                user: {
+                    id: userId,
+                    name: userName,
+                    avatar: userAvatar
+                },
+                description: listing.description,
+                image: listing.images?.[0]?.url, // Get the first image URL if available
+                createdAt: listing.createdAt,
+                category: listing.category
+            };
+        });
 
         return NextResponse.json(transformedListings);
     } catch (error) {

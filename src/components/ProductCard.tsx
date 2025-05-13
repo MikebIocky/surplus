@@ -4,13 +4,8 @@
 import React, { useState, useTransition } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge"; // If displaying status
-import { cn } from '@/lib/utils';
-import { formatDistanceToNow } from "date-fns";
-import { Clock, MapPin } from "lucide-react";
-import { getMainImageUrl } from '@/lib/getMainImageUrl';
+import { Clock } from "lucide-react";
 
 // Props expected by the card
 interface ProductCardProps {
@@ -151,8 +146,6 @@ interface RateUserModalProps {
 }
 
 export function RateUserModal({ userId, onClose, onRated }: RateUserModalProps) {
-  const [value, setValue] = useState(5);
-  const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -161,7 +154,7 @@ export function RateUserModal({ userId, onClose, onRated }: RateUserModalProps) 
     await fetch(`/api/users/${userId}/rate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ value, comment }),
+      body: JSON.stringify({ value: 5, comment: "" }),
     });
     setLoading(false);
     onRated?.();
@@ -174,8 +167,8 @@ export function RateUserModal({ userId, onClose, onRated }: RateUserModalProps) 
       <textarea
         className="w-full border rounded p-2 mt-2"
         placeholder="Optional comment"
-        value={comment}
-        onChange={e => setComment(e.target.value)}
+        value=""
+        onChange={e => {}}
       />
       <button type="submit" className="mt-2 btn btn-primary" disabled={loading}>
         {loading ? "Submitting..." : "Submit"}

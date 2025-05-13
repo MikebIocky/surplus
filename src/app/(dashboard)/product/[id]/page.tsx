@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { notFound, redirect } from 'next/navigation';
-import Link from 'next/link';
 import { cookies } from 'next/headers'; // Import directly
 import { jwtVerify, JWTPayload } from 'jose'; // Use jose
 import mongoose from 'mongoose';
@@ -11,22 +10,18 @@ import mongoose from 'mongoose';
 import {
     fetchListingDetails,
     fetchRecommendedListings,
-    ProductPageData,
-    RecommendedItemData
 } from "@/lib/dataFetch";
 
 // --- UI Components ---
 import { ProductDetail, ProductDetailProps } from "@/components/ProductDetail"; // Import props type too
-import { Button } from '@/components/ui/button';
-import { Edit } from 'lucide-react';
 
 // --- Server Component Configuration ---
 export const dynamic = 'force-dynamic'; // Ensure fresh data
 
 // Type guard (keep as is)
-function isValidStatus(status: any): status is NonNullable<ProductDetailProps['status']> {
+function isValidStatus(status: unknown): status is NonNullable<ProductDetailProps['status']> {
     const validStatuses: Array<ProductDetailProps['status']> = ['Available', 'Picking Up', 'Unavailable'];
-    return validStatuses.includes(status);
+    return typeof status === 'string' && (validStatuses as string[]).includes(status);
 }
 
 // --- Authentication Helper (Corrected cookie access) ---

@@ -13,7 +13,7 @@ async function getLoggedInUserId() {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
   try {
     const { payload } = await jwtVerify(token, secret);
-    return (payload as any).user?.id as string;
+    return (payload as { user?: { id?: string } }).user?.id as string;
   } catch {
     return null;
   }

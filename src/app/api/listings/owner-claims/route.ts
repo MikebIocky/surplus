@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import Listing from '@/models/Listing';
-import User from '@/models/User';
 import { getUserIdFromCookieServer } from '@/lib/authUtils';
 
 export async function GET(req: NextRequest) {

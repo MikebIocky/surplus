@@ -89,10 +89,6 @@ export function ProductDetail({
   const statusText = status === 'Picking Up' ? 'Reserved' : status;
 
   // Add handlers for the new actions
-  const handleChat = () => {
-    router.push(`/chat/${user.id}`);
-  };
-
   const handleGetItem = async () => {
     if (isLoading) return;
     setIsLoading('get');
@@ -106,8 +102,6 @@ export function ProductDetail({
         throw new Error(data.error || 'Failed to claim item');
       }
 
-      const data = await response.json();
-      
       toast({
         title: "Request sent!",
         description: "Your claim request has been sent. Please wait for the owner's response.",

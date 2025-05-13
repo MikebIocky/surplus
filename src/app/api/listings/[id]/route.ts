@@ -96,10 +96,10 @@ export async function PUT(
             { status: 200 }
         );
 
-    } catch (error: any) {
+    } catch (error) {
         console.error(`[API UPDATE] Error updating listing ${listingId}:`, error);
-         if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map((err: any) => err.message);
+         if (error instanceof Error && (error as any).name === 'ValidationError') {
+            const messages = Object.values((error as any).errors).map((err: any) => err.message);
             return NextResponse.json<ErrorResponse>({ error: `Validation failed: ${messages.join(', ')}` }, { status: 400 });
          }
         return NextResponse.json<ErrorResponse>({ error: 'Failed to update listing' }, { status: 500 });

@@ -14,7 +14,7 @@ async function getLoggedInUserId() {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
   try {
     const { payload } = await jwtVerify(token, secret);
-    return (payload as any).user?.id as string;
+    return (payload as { user?: { id?: string } }).user?.id as string;
   } catch (error) {
     return null;
   }
@@ -126,9 +126,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-}
-
-async function checkIfFollowing(followerId: string, followingId: string): Promise<boolean> {
-  const user = await User.findById(followerId).select('following').lean();
-  return user?.following?.some((id: mongoose.Types.ObjectId) => id.toString() === followingId) ?? false;
 } 

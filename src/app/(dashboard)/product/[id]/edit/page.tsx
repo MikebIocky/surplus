@@ -5,21 +5,11 @@ import { notFound, redirect } from 'next/navigation';
 import mongoose from 'mongoose';
 // --- CORRECTED IMPORT ---
 import { getUserIdFromCookieServer } from '@/lib/authUtils'; // Use the correct exported name
-import { fetchListingDetails, ProductPageData } from '@/lib/dataFetch';
+import { fetchListingDetails } from '@/lib/dataFetch';
 import EditListingForm from './EditListingForm';
 
 // Force dynamic rendering and no caching
 export const dynamic = 'force-dynamic';
-
-interface PageProps {
-  params: {
-    id: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
-}
-
-// --- REMOVE any local redefinition of getLoggedInUserIdServer here ---
-// async function getLoggedInUserIdServer(): Promise<string | null> { ... DO NOT REDEFINE HERE ... }
 
 // Server Component to fetch data and authorize
 export default async function EditProductPage({ params }: { params: { id: string } }) {

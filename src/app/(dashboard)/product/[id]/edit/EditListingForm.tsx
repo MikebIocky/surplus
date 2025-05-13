@@ -67,12 +67,11 @@ export default function EditListingForm({ listing }: EditListingFormProps) {
   const [contact, setContact] = useState(listing.contact || '');
   const [existingImages, setExistingImages] = useState<ExistingImage[]>(listing.images);
   const [newImages, setNewImages] = useState<ImageFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isLoading = isAuthLoading || isUploading || isSubmitting || isDeleting;
+  const isLoading = isAuthLoading || isSubmitting || isDeleting;
 
   // Handle image selection
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -466,10 +465,6 @@ export default function EditListingForm({ listing }: EditListingFormProps) {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isSubmitting
                 ? 'Updating Listing...'
-                : isUploading
-                ? 'Uploading Images...'
-                : isAuthLoading
-                ? 'Authenticating...'
                 : 'Update Listing'}
             </Button>
 

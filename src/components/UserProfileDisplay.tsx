@@ -1,14 +1,9 @@
 // src/components/UserProfileDisplay.tsx
 "use client";
 
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProductCard } from "@/components/ProductCard";
-import { UserPlus, UserMinus, Star, Package as PackageIcon } from "lucide-react";
 import FollowButton from './FollowButton';
 
 // --- Types for Props ---
@@ -32,37 +27,10 @@ type Product = {
     createdAt: Date;
 };
 
-type UserProfileData = {
-    id: string;
-    name: string;
-    avatar?: string;
-    rating: number;
-    description?: string;
-    postedListings: Product[]; // Listings posted BY THIS user
-};
-
 interface UserProfileDisplayProps {
     user: User;
     isFollowing?: boolean;
 }
-
-// --- Mock API Call Functions (Replace with actual API calls) ---
-async function followUserApi(targetUserId: string): Promise<boolean> {
-    console.log(`API CALL: Following user ${targetUserId}`);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    // Assume success for mock
-    return true;
-}
-
-async function unfollowUserApi(targetUserId: string): Promise<boolean> {
-    console.log(`API CALL: Unfollowing user ${targetUserId}`);
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 500));
-    // Assume success for mock
-    return true;
-}
-// --- End Mock API Calls ---
 
 export function UserProfileDisplay({ user, isFollowing = false }: UserProfileDisplayProps) {
     const initials = user.name

@@ -4,8 +4,6 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useCallback, useState, useMemo } from "react";
 import debounce from "lodash/debounce";
-import Image from "next/image";
-import { formatDistanceToNow } from "date-fns";
 
 // Define the props interface to include className
 interface SearchBarProps {

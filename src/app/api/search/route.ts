@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/dbConnect';
 import User from '@/models/User';
 import Listing from '@/models/Listing';
-import { getUserIdFromRequest } from '@/lib/authUtils';
-import mongoose from 'mongoose';
 
 export async function GET(req: NextRequest) {
     try {

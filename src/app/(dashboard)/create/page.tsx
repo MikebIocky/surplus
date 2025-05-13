@@ -34,11 +34,10 @@ export default function CreateListingPage() {
   const [contact, setContact] = useState('');
   const [category, setCategory] = useState('');
   const [images, setImages] = useState<ImageFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isLoading = isAuthLoading || isUploading || isSubmitting;
+  const isLoading = isAuthLoading || isSubmitting;
 
   // Auth Check & Redirect
   useEffect(() => {
@@ -385,7 +384,7 @@ export default function CreateListingPage() {
                 disabled={isLoading}
               />
               <p className="text-xs text-muted-foreground">
-                Only provide if you're comfortable sharing it publicly.
+                Only provide if you&apos;re comfortable sharing it publicly.
               </p>
             </div>
 
@@ -410,10 +409,6 @@ export default function CreateListingPage() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSubmitting
                   ? 'Creating Listing...'
-                  : isUploading
-                  ? 'Uploading Images...'
-                  : isAuthLoading
-                  ? 'Authenticating...'
                   : 'Create Listing'}
               </Button>
             </div>

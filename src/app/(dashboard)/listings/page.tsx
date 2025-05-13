@@ -2,12 +2,7 @@
 "use client" // Add back client directive since we need client-side interactivity
 
 import React from 'react'; // Import React
-import { ProductCard, ProductCardProps } from "@/components/ProductCard"; // Import ProductCard and its props type if available
-import dbConnect from '@/lib/dbConnect'; // Import DB connection utility
-import Listing, { IListing } from '@/models/Listing'; // Import Listing model and interface
-import User, { IUser } from '@/models/User'; // Import User model if needed for typing populated fields
-import mongoose, { Types } from 'mongoose'; // Import mongoose types
-import { getMainImageUrl } from '@/lib/getMainImageUrl'; // Import getMainImageUrl utility
+import { ProductCard } from "@/components/ProductCard"; // Import ProductCard
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRouter, useSearchParams } from 'next/navigation';
 
