@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, Types, Model } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 import type { IUser } from './User';
 import type { IConversation } from './Conversation';
 

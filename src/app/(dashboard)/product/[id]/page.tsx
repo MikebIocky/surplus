@@ -18,12 +18,6 @@ import { ProductDetail, ProductDetailProps } from "@/components/ProductDetail"; 
 // --- Server Component Configuration ---
 export const dynamic = 'force-dynamic'; // Ensure fresh data
 
-// Type guard (keep as is)
-function isValidStatus(status: unknown): status is NonNullable<ProductDetailProps['status']> {
-    const validStatuses: Array<ProductDetailProps['status']> = ['Available', 'Picking Up', 'Unavailable'];
-    return typeof status === 'string' && (validStatuses as string[]).includes(status);
-}
-
 // --- Authentication Helper (Corrected cookie access) ---
 /**
  * Retrieves the logged-in user's ID from the JWT token in cookies.

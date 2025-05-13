@@ -18,15 +18,6 @@ type User = {
     updatedAt: Date;
 };
 
-type Product = {
-    id: string;
-    title: string;
-    user: User; // User who listed the item
-    description?: string;
-    image?: string;
-    createdAt: Date;
-};
-
 interface UserProfileDisplayProps {
     user: User;
     isFollowing?: boolean;

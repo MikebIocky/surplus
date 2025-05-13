@@ -6,6 +6,10 @@ import User from '@/models/User';
 import Message from '@/models/Message'; // Import Message to populate lastMessage
 import { getUserIdFromRequest } from '@/lib/authUtils'; // Your helper to get user ID from cookie/token
 
+function isObjectWithId(val: unknown): val is { _id: { toString: () => string } } {
+  return typeof val === 'object' && val !== null && '_id' in val && typeof (val as any)._id === 'object' && (val as any)._id !== null && 'toString' in (val as any)._id;
+}
+
 export async function GET(req: NextRequest) {
     const userId = await getUserIdFromRequest(req); // Assumes helper verifies token
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,19 +40,32 @@ export async function GET(req: NextRequest) {
         const formattedConversations = conversations.map(convo => {
             const otherParticipant = convo.participants.find(p => p?._id?.toString() !== userId);
             // Type assertion for populated lastMessage
-            const lastMsg = convo.lastMessage as any;
+            const lastMsg = convo.lastMessage as { content?: string; sender?: string; createdAt?: string };
             return {
                 _id: convo._id,
-                otherParticipant: otherParticipant || null, // The user being chatted with
+                otherParticipant: isObjectWithId(otherParticipant)
+                    ? {
+                        name: (otherParticipant as { name?: string }).name,
+                        _id: otherParticipant._id.toString(),
+                    }
+                    : { name: undefined, _id: undefined },
                 lastMessage: lastMsg ? {
                     content: lastMsg.content,
-                    senderName: lastMsg.sender?.name || '...', // Handle potential missing sender
+                    sender: lastMsg.sender,
                     createdAt: lastMsg.createdAt,
-                    isOwn: lastMsg.sender?._id?.toString() === userId,
+                    isOwn:
+                        typeof lastMsg.sender === 'object' &&
+                        lastMsg.sender !== null &&
+                        '_id' in lastMsg.sender &&
+                        typeof (lastMsg.sender as any)._id === 'object' &&
+                        (lastMsg.sender as any)._id !== null &&
+                        'toString' in (lastMsg.sender as any)._id
+                            ? (lastMsg.sender as { _id: { toString: () => string } })._id.toString() === userId
+                            : lastMsg.sender === userId,
                 } : null,
                 updatedAt: convo.updatedAt,
             };
-        }).filter(c => c.otherParticipant); // Filter out potential malformed convos
+        }).filter(c => typeof c.otherParticipant._id === 'string' && c.otherParticipant._id.length > 0); // Filter out malformed convos
 
         return NextResponse.json(formattedConversations);
 

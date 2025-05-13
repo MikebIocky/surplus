@@ -3,7 +3,7 @@ import dbConnect from '@/lib/dbConnect';
 import Listing from '@/models/Listing';
 import { getUserIdFromCookieServer } from '@/lib/authUtils';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     await dbConnect();
     const userId = await getUserIdFromCookieServer();

@@ -2,7 +2,7 @@
 
 import dbConnect from '@/lib/dbConnect';        // Database connection utility
 import Listing, { IListing } from '@/models/Listing'; // Listing model and TS interface
-import User, { IUser } from '@/models/User';        // User model and TS interface
+import { IUser } from '@/models/User';        // User model and TS interface
 import mongoose, { Types } from 'mongoose';       // Mongoose for ObjectId validation and types
 import { getMainImageUrl } from '@/lib/getMainImageUrl';
 

@@ -2,14 +2,11 @@
 
 "use client";
 
-import React, { ReactNode, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Home, Clock, Users, ShoppingBag, Plus, User, ChevronDown, LogOut, LogIn, Settings, FileText, Loader2, MessageSquare, Bell } from "lucide-react";
+import { Home, Clock, Users, ShoppingBag, Plus, User, ChevronDown, LogOut, LogIn, Settings, FileText, Bell, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from '@/hooks/useAuth';
-import { SearchBar } from "@/components/SearchBar";
-import { SearchResults } from "@/components/SearchResults";
-import { useSearch } from "@/components/SearchProvider";
 import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -125,9 +122,7 @@ function NotificationBell() {
 // --- Main Component ---
 export function AppSidebar() {
   const { user, logout, isLoading } = useAuth();
-  const { handleSearch, searchResults, handleCloseSearch } = useSearch();
   const router = useRouter();
-  const [isLoadingClaim, setIsLoadingClaim] = useState(false);
 
   React.useEffect(() => {
       console.log("[AppSidebar EFFECT] Auth State Update:", { isLoading, userId: user?.id });
@@ -153,32 +148,6 @@ export function AppSidebar() {
         (item.requiresLogin === true && !!user)
       )
     : [];
-
-  const handleGetItem = async (listingId: string) => {
-    setIsLoadingClaim(true);
-    try {
-      const res = await fetch(`/api/listings/${listingId}/claim`, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to claim item');
-      toast({ title: "Success!", description: "Owner has been notified. Chat started!" });
-      router.push(`/messages/${data.chatId}`);
-
-      await fetch('/api/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user: data.listing.user._id,
-          type: 'claim',
-          message: `${data.claimerName} wants to get your item: ${data.listing.title}`,
-          link: `/messages/${data.chatId}`
-        })
-      });
-    } catch (err) {
-      toast({ title: "Error", description: err instanceof Error ? err.message : String(err), variant: "destructive" });
-    } finally {
-      setIsLoadingClaim(false);
-    }
-  };
 
   return (
     <Sidebar className={cn(

@@ -1,6 +1,5 @@
 // src/app/api/listings/create/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify } from 'jose'; // Use jose for consistency with middleware potentially
 
 // --- DB & Model Imports ---
 import dbConnect from '@/lib/dbConnect';        // Ensure correct path

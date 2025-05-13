@@ -53,11 +53,11 @@ export async function POST(req: NextRequest) {
     // Return typed successful response
     return NextResponse.json<SignupSuccessResponse>(successResponseBody, { status: 201 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     // ... (error handling remains the same) ...
     console.error('Signup API Error:', error);
     // Handle specific Mongoose validation errors
-     if (error.name === 'ValidationError') {
+     if (error instanceof mongoose.Error.ValidationError) {
        const messages = Object.values(error.errors).map((err: any) => err.message);
        return NextResponse.json<ErrorResponse>({ error: `Validation failed: ${messages.join(', ')}` }, { status: 400 });
      }

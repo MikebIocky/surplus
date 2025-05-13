@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { notFound } from 'next/navigation';
-import Image from 'next/image'; // Keep if ProductCard uses it
 import { cookies } from 'next/headers'; // Core Next.js function for server-side cookie access
 import jwt from 'jsonwebtoken'; // For verifying JWT tokens
 import mongoose, { Types } from 'mongoose'; // For ObjectId validation and types
@@ -19,7 +18,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 // Note: Card components are not used directly here if ProfileTabs handles card display
 // import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Edit, Star, MessageCircle, UserPlus, UserMinus } from "lucide-react";
+import { Edit, Star, MessageCircle } from "lucide-react";
 import { ProfileTabs } from '@/components/ProfileTabs'; // Ensure this Client Component exists
 import Link from 'next/link';
 import FollowButton from '@/components/FollowButton';
