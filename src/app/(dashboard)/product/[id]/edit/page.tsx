@@ -1,5 +1,3 @@
-// src/app/(dashboard)/product/[id]/edit/page.tsx
-
 import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import mongoose from 'mongoose';
@@ -7,18 +5,16 @@ import { getUserIdFromCookieServer } from '@/lib/authUtils';
 import { fetchListingDetails } from '@/lib/dataFetch';
 import EditListingForm from './EditListingForm';
 
-// Define specific props for this page
-interface EditProductPageProps {
-  params: { id: string };
-  searchParams?: { [key: string]: string | string[] | undefined }; // Standard for Next.js, include if you might use searchParams
-}
-
 // Force dynamic rendering and no caching
 export const dynamic = 'force-dynamic';
 
+type PageProps = {
+  params: { id: string }
+}
+
 // Server Component to fetch data and authorize
-export default async function EditProductPage({ params }: EditProductPageProps) { // Use the defined interface
-    const listingId = params.id;
+export default async function EditProductPage({ params }: PageProps) {
+  const listingId = params.id;
 
     // 1. Validate ID format
     if (!mongoose.Types.ObjectId.isValid(listingId)) {
