@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Conversation {
   _id: string;
@@ -40,13 +41,12 @@ export default function MessagesPage() {
               style={{ minHeight: 90 }}
             >
               <div className="flex-shrink-0">
-                <img
+                <Image
                   src={conv.otherParticipant.avatar || "/default-avatar.png"}
                   alt={conv.otherParticipant.name}
+                  width={64}
+                  height={64}
                   className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 group-hover:border-primary"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "/default-avatar.png";
-                  }}
                 />
               </div>
               <div className="flex-1 min-w-0">

@@ -2,12 +2,10 @@ import { notFound } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import dbConnect from '@/lib/dbConnect';
-import User from '@/models/User';
 import Message from '@/models/Message';
 import Conversation from '@/models/Conversation';
 import mongoose from 'mongoose';
 import { ConversationClient } from './ConversationClient';
-import { formatDistanceToNow } from 'date-fns';
 
 interface MongoMessage {
     _id: mongoose.Types.ObjectId;
@@ -52,14 +50,16 @@ export default async function ConversationPage({ params }: { params: Promise<{ c
     }
 
     // Find the other participant
-    const participants = (conversation as any).participants as any[];
-    const otherUser = participants.find((u) => u._id.toString() !== currentUserId);
-    if (!otherUser) {
+    const participants = (conversation as unknown as { participants: any[] }).participants;
+    const otherUser = participants.find((u: any) => u && u._id && u._id.toString() !== currentUserId);
+    if (!otherUser || !otherUser.name) {
         notFound();
     }
     const formattedOtherUser = {
         ...otherUser,
         _id: otherUser._id.toString(),
+        name: otherUser.name || '',
+        avatar: otherUser.avatar || undefined,
     };
 
     // Fetch messages for the conversation, populating sender's name and avatar
@@ -76,13 +76,13 @@ export default async function ConversationPage({ params }: { params: Promise<{ c
             if (msg.sender && typeof msg.sender === 'object' && 'name' in msg.sender) {
                 return {
                     _id: msg.sender._id.toString(),
-                    name: msg.sender.name,
-                    avatar: msg.sender.avatar,
+                    name: (msg.sender as { name: string }).name,
+                    avatar: (msg.sender as { avatar?: string }).avatar,
                 };
             } else {
                 // fallback for ObjectId
                 return {
-                    _id: msg.sender?.toString?.() || '',
+                    _id: (msg.sender as mongoose.Types.ObjectId)?.toString?.() || '',
                     name: '',
                     avatar: undefined,
                 };

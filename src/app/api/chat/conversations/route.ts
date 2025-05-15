@@ -6,16 +6,14 @@ import User from '@/models/User';
 import Message from '@/models/Message'; // Import Message to populate lastMessage
 import { getUserIdFromRequest } from '@/lib/authUtils'; // Your helper to get user ID from cookie/token
 
-function isObjectWithId(val: unknown): val is { _id: { toString: () => string } } {
+function isSenderObject(val: unknown): val is { _id: { toString: () => string } } {
   if (typeof val !== 'object' || val === null || !('_id' in val)) return false;
   const id = (val as { _id?: unknown })._id;
   return typeof id === 'object' && id !== null && 'toString' in id;
 }
 
-function isSenderObject(val: unknown): val is { _id: { toString: () => string } } {
-  if (typeof val !== 'object' || val === null || !('_id' in val)) return false;
-  const id = (val as { _id?: unknown })._id;
-  return typeof id === 'object' && id !== null && 'toString' in id;
+function isValidParticipant(u: any): u is { _id: { toString: () => string }, name: string, avatar?: string } {
+  return u && typeof u === 'object' && '_id' in u && 'name' in u && typeof u.name === 'string';
 }
 
 export async function GET(req: NextRequest) {
@@ -46,12 +44,12 @@ export async function GET(req: NextRequest) {
 
         // Clean up the data structure for the client
         const formattedConversations = conversations.map(convo => {
-            const otherUser = convo.participants.find((u: any) => u._id.toString() !== userId);
+            const otherUser = (convo.participants as unknown[]).find((u: any) => isValidParticipant(u) && u._id.toString() !== userId);
             // Type assertion for populated lastMessage
             const lastMsg = convo.lastMessage as { content?: string; sender?: string; createdAt?: string };
             return {
                 _id: convo._id,
-                otherParticipant: otherUser
+                otherParticipant: isValidParticipant(otherUser)
                     ? {
                         _id: otherUser._id.toString(),
                         name: otherUser.name,
@@ -64,7 +62,7 @@ export async function GET(req: NextRequest) {
                     createdAt: lastMsg.createdAt,
                     isOwn:
                         isSenderObject(lastMsg.sender)
-                            ? lastMsg.sender._id.toString() === userId
+                            ? (lastMsg.sender as { _id: { toString: () => string } })._id.toString() === userId
                             : lastMsg.sender === userId,
                 } : null,
                 updatedAt: convo.updatedAt,

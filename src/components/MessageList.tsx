@@ -49,13 +49,12 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
                     >
                         {/* Other user avatar */}
                         {!isOwn && (
-                            <img
+                            <Image
                                 src={message.sender.avatar || "/default-avatar.png"}
                                 alt={message.sender.name || "User"}
+                                width={40}
+                                height={40}
                                 className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 bg-white mr-3"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = "/default-avatar.png";
-                                }}
                             />
                         )}
                         {/* Bubble */}
@@ -71,13 +70,12 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
                         </div>
                         {/* Own avatar */}
                         {isOwn && (
-                            <img
+                            <Image
                                 src={message.sender.avatar || "/default-avatar.png"}
                                 alt={message.sender.name || "You"}
-                                className="w-10 h-10 rounded-full object-cover border-2 border-blue-200 bg-white ml-3"
-                                onError={(e) => {
-                                    (e.target as HTMLImageElement).src = "/default-avatar.png";
-                                }}
+                                width={40}
+                                height={40}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-green-200 bg-white ml-3"
                             />
                         )}
                     </div>

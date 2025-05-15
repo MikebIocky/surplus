@@ -6,10 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Send, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
+interface Message {
+    _id?: string;
+    content: string;
+    sender: {
+        _id: string;
+        name?: string;
+        avatar?: string;
+    };
+    createdAt: string;
+}
+
 interface MessageInputProps {
     recipientId: string;
     currentUserId: string;
-    onMessageSent?: (msg: any) => void;
+    onMessageSent?: (msg: Message) => void;
 }
 
 export function MessageInput({ recipientId, currentUserId, onMessageSent }: MessageInputProps) {

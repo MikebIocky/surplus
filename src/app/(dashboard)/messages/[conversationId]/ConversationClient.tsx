@@ -3,12 +3,15 @@
 import React, { useEffect, useRef } from 'react';
 import { MessageList } from '@/components/MessageList';
 import { MessageInput } from '@/components/MessageInput';
+import Image from 'next/image';
 
 interface Message {
     _id?: string;
     content: string;
     sender: {
         _id: string;
+        name?: string;
+        avatar?: string;
     };
     createdAt: string;
 }
@@ -27,24 +30,21 @@ interface ConversationClientProps {
 }
 
 export function ConversationClient({ messages, currentUserId, conversationId, otherUser }: ConversationClientProps) {
-    const [chatMessages, setChatMessages] = React.useState(messages);
-    const [pendingMessages, setPendingMessages] = React.useState<any[]>([]);
+    const [chatMessages, setChatMessages] = React.useState<Message[]>(messages);
+    const [pendingMessages, setPendingMessages] = React.useState<Message[]>([]);
     const pendingMessagesRef = useRef(pendingMessages);
     useEffect(() => { pendingMessagesRef.current = pendingMessages; }, [pendingMessages]);
 
-    // Remove polling useEffect
     useEffect(() => {
         setChatMessages(messages);
-        setPendingMessages([]); // Clear pending on conversation change
+        setPendingMessages([]);
     }, [conversationId, messages]);
 
-    // Optimistically add message
-    const handleMessageSent = (msg: any) => {
+    const handleMessageSent = (msg: Message) => {
         setPendingMessages(prev => [...prev, msg]);
         setChatMessages(prev => [...prev, msg]);
     };
 
-    // Patch MessageList to use a fallback key for optimistic messages
     const PatchedMessageList = (props: any) => (
         <MessageList
             {...props}
@@ -59,9 +59,11 @@ export function ConversationClient({ messages, currentUserId, conversationId, ot
         <div className="flex flex-col max-w-5xl mx-auto bg-white/90 rounded-2xl shadow-2xl border border-gray-200 mt-10 h-[80vh] overflow-hidden relative">
             {/* Chat Header */}
             <div className="sticky top-0 z-10 flex items-center gap-4 p-6 border-b bg-gradient-to-r from-primary/10 to-white/80 rounded-t-2xl shadow-sm backdrop-blur">
-                <img
+                <Image
                     src={otherUser.avatar || '/default-avatar.png'}
                     alt={otherUser.name}
+                    width={56}
+                    height={56}
                     className="w-14 h-14 rounded-full object-cover border-2 border-primary/30 shadow"
                     onError={(e) => {
                         (e.target as HTMLImageElement).src = '/default-avatar.png';
