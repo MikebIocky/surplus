@@ -33,7 +33,7 @@ export function ChatWindow({ messages, currentUserId, onSend }: Props) {
       </div>
       <form
         className="p-4 border-t flex gap-2"
-        onSubmit={e => { e.preventDefault(); const form = e.target as any; onSend(form.message.value); form.message.value = ''; }}
+        onSubmit={e => { e.preventDefault(); const form = e.target as HTMLFormElement & { message: { value: string } }; onSend(form.message.value); form.message.value = ''; }}
       >
         <input name="message" className="flex-1 border rounded p-2" placeholder="Type a message..." autoComplete="off" />
         <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">Send</button>

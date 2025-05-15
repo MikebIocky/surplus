@@ -36,8 +36,8 @@ const Ordering = () => {
         if (!res.ok) throw new Error('Failed to fetch claims');
         const data = await res.json();
         setClaims(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'An error occurred');
       } finally {
         setLoading(false);
       }
