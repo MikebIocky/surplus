@@ -10,13 +10,11 @@ import mongoose from 'mongoose';
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+    { params }: { params: { id: string } }
 ) {
     try {
-        const resolvedParams = await params;
-        const { id: listingId } = resolvedParams;
-
-        // Get the current user's ID from the JWT token
+        await dbConnect();
+        const { id: listingId } = params;
         const cookieStore = await cookies();
         const token = cookieStore.get('authToken')?.value;
 
@@ -32,14 +30,10 @@ export async function POST(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        // Validate ObjectIds
         if (!mongoose.Types.ObjectId.isValid(listingId) || !mongoose.Types.ObjectId.isValid(userId)) {
             return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
         }
 
-        await dbConnect();
-
-        // Check if listing exists and is available
         const listing = await Listing.findById(listingId);
         if (!listing) {
             return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
@@ -49,40 +43,39 @@ export async function POST(
             return NextResponse.json({ error: 'Listing is not available' }, { status: 400 });
         }
 
-        // Check if user is not the owner
         if (listing.user.toString() === userId) {
             return NextResponse.json({ error: 'Cannot claim your own listing' }, { status: 400 });
         }
 
-        // Create order
         const order = await Order.create({
-            listing: listingId,
-            recipient: userId,
+            listing: listing._id,
+            recipient: new mongoose.Types.ObjectId(userId),
             status: 'pending',
             claimedAt: new Date()
         });
 
-        // Update listing status
-        listing.status = 'claimed';
+        listing.status = 'pending';
+        listing.pendingClaim = { user: new mongoose.Types.ObjectId(userId), requestedAt: new Date() };
         await listing.save();
 
-        // Get the claimer's name for the notification
+        console.log('[CLAIM] Created order:', order);
+        console.log('[CLAIM] Updated listing:', listing);
+
         const claimer = await User.findById(userId).select('name').lean();
         if (!claimer) {
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // Create notification for the listing owner
         await Notification.create({
             user: listing.user._id,
             type: 'claim',
             message: `${claimer.name} wants to get your item: ${listing.title}`,
-            link: `/dashboard/claims` // Link to the owner's claims review page
+            link: `/dashboard/claims`
         });
 
         return NextResponse.json({ 
-            message: 'Listing claimed successfully',
-            orderId: order._id
+            message: 'Claim request sent to owner. Awaiting approval.',
+            orderId: order._id.toString()
         });
     } catch (error) {
         console.error('Error claiming listing:', error);

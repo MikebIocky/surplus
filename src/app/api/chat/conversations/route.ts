@@ -46,17 +46,18 @@ export async function GET(req: NextRequest) {
 
         // Clean up the data structure for the client
         const formattedConversations = conversations.map(convo => {
-            const otherParticipant = convo.participants.find(p => p?._id?.toString() !== userId);
+            const otherUser = convo.participants.find((u: any) => u._id.toString() !== userId);
             // Type assertion for populated lastMessage
             const lastMsg = convo.lastMessage as { content?: string; sender?: string; createdAt?: string };
             return {
                 _id: convo._id,
-                otherParticipant: isObjectWithId(otherParticipant)
+                otherParticipant: otherUser
                     ? {
-                        name: (otherParticipant as { name?: string }).name,
-                        _id: otherParticipant._id.toString(),
+                        _id: otherUser._id.toString(),
+                        name: otherUser.name,
+                        avatar: otherUser.avatar,
                     }
-                    : { name: undefined, _id: undefined },
+                    : null,
                 lastMessage: lastMsg ? {
                     content: lastMsg.content,
                     sender: lastMsg.sender,
@@ -68,7 +69,7 @@ export async function GET(req: NextRequest) {
                 } : null,
                 updatedAt: convo.updatedAt,
             };
-        }).filter(c => typeof c.otherParticipant._id === 'string' && c.otherParticipant._id.length > 0); // Filter out malformed convos
+        }).filter(c => c.otherParticipant && typeof c.otherParticipant._id === 'string' && c.otherParticipant._id.length > 0); // Filter out malformed convos
 
         return NextResponse.json(formattedConversations);
 

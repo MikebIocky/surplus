@@ -4,30 +4,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import dbConnect from '@/lib/dbConnect';
 import Listing from '@/models/Listing';
-import { getUserIdFromCookieServer } from '@/lib/authUtils'; // Your auth helper
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-// Import Cloudinary if needed for deleting old images
-// import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary if deleting images
-// cloudinary.config({ ... });
-
-interface UpdateListingRequestBody {
-  title?: string;
-  description?: string;
-  quantity?: string;
-  location?: string;
-  images?: Array<{ url: string; publicId: string }>;
-  expiryDate?: string | null;
-  contact?: string | null;
-  // Potentially status if you allow editing status
-}
-
-interface SuccessResponse { message: string; listingId: string; }
-interface ErrorResponse { error: string; }
-
-// --- PUT Handler (for full updates, or use PATCH for partial) ---
 export async function PUT(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
@@ -42,7 +21,7 @@ export async function PUT(
 
         if (!token) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+    }
 
         const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
         const { payload } = await jwtVerify(token, secret);
@@ -50,11 +29,11 @@ export async function PUT(
 
         if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+    }
 
         if (!mongoose.Types.ObjectId.isValid(listingId)) {
             return NextResponse.json({ error: 'Invalid listing ID' }, { status: 400 });
-        }
+    }
 
         await dbConnect();
         const listing = await Listing.findById(listingId);
@@ -89,7 +68,7 @@ export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    try {
+  try {
         const resolvedParams = await params;
         const { id: listingId } = resolvedParams;
 
@@ -97,23 +76,23 @@ export async function GET(
             return NextResponse.json({ error: 'Invalid listing ID' }, { status: 400 });
         }
 
-        await dbConnect();
+    await dbConnect();
         const listing = await Listing.findById(listingId)
             .populate('user', 'name avatar')
-            .lean();
+      .lean();
 
-        if (!listing) {
+    if (!listing) {
             return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
-        }
-
-        return NextResponse.json(listing);
-    } catch (error) {
-        console.error('Error fetching listing:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
     }
+
+    return NextResponse.json(listing);
+  } catch (error) {
+        console.error('Error fetching listing:', error);
+    return NextResponse.json(
+            { error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
 }
 
 // DELETE handler to remove a listing
@@ -121,7 +100,7 @@ export async function DELETE(
     request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
-    try {
+  try {
         const resolvedParams = await params;
         const { id: listingId } = resolvedParams;
 
@@ -136,10 +115,10 @@ export async function DELETE(
         const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
         const { payload } = await jwtVerify(token, secret);
         const userId = (payload as { user?: { id?: string } }).user?.id;
-
-        if (!userId) {
+    
+    if (!userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+    }
 
         if (!mongoose.Types.ObjectId.isValid(listingId)) {
             return NextResponse.json({ error: 'Invalid listing ID' }, { status: 400 });
@@ -147,19 +126,19 @@ export async function DELETE(
 
         await dbConnect();
         const listing = await Listing.findById(listingId);
+    
+    if (!listing) {
+      return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
+    }
 
-        if (!listing) {
-            return NextResponse.json({ error: 'Listing not found' }, { status: 404 });
-        }
-
-        if (listing.user.toString() !== userId) {
+    if (listing.user.toString() !== userId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
-        }
+    }
 
         await Listing.findByIdAndDelete(listingId);
-        return NextResponse.json({ message: 'Listing deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting listing:', error);
+    return NextResponse.json({ message: 'Listing deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting listing:', error);
         return NextResponse.json(
             { error: 'Internal server error' },
             { status: 500 }

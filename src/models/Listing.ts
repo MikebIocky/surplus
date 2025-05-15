@@ -4,14 +4,14 @@ import { IUser } from './User'; // Import IUser interface for population typing
 
 // Define the structure of the data for a Listing document
 export interface IListing extends Document {
-  _id: mongoose.Types.ObjectId; // Explicitly define _id for clarity
+  _id: Types.ObjectId;
   title: string;
   description: string;
   images: Array<{
     url: string;
     publicId: string;
   }>;
-  status: 'available' | 'pending' | 'claimed' | 'archived'; // Specific allowed statuses
+  status: 'available' | 'pending' | 'claimed';
   user: Types.ObjectId | IUser; // Reference to the User who posted it (can be populated)
   category: string; // Add category field
 
@@ -31,7 +31,7 @@ export interface IListing extends Document {
   updatedAt: Date;
 
   pendingClaim?: {
-    user: Types.ObjectId | IUser;
+    user: Types.ObjectId;
     requestedAt: Date;
   };
 }
@@ -62,7 +62,7 @@ const ListingSchema: Schema<IListing> = new Schema(
     status: {
         type: String,
         enum: {
-            values: ['available', 'pending', 'claimed', 'archived'], // Added 'pending'
+            values: ['available', 'pending', 'claimed'],
             message: '{VALUE} is not a supported status.'
         },
         default: 'available',

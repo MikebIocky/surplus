@@ -10,6 +10,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { SearchResults } from "@/components/SearchResults";
 import { useSearch } from "@/components/SearchProvider";
 import { geistSans, geistMono } from '@/lib/fonts';
+import "@/styles/fonts.css";
 
 function MainContent({ children }: { children: React.ReactNode }) {
   const { handleSearch, searchResults, handleCloseSearch } = useSearch();

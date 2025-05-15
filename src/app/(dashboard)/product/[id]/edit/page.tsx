@@ -15,40 +15,40 @@ export default async function EditProductPage(props: {
   const params = await props.params;
   const listingId = params.id;
 
-  // 1. Validate ID format
-  if (!mongoose.Types.ObjectId.isValid(listingId)) {
-    console.log(`[EDIT PAGE] Invalid listingId format: ${listingId}`);
-    notFound();
-  }
+    // 1. Validate ID format
+    if (!mongoose.Types.ObjectId.isValid(listingId)) {
+        console.log(`[EDIT PAGE] Invalid listingId format: ${listingId}`);
+        notFound();
+    }
 
-  // 2. Fetch listing data and logged-in user concurrently
-  const [loggedInUserId, listingData] = await Promise.all([
-    getUserIdFromCookieServer(),
-    fetchListingDetails(listingId)
-  ]);
+    // 2. Fetch listing data and logged-in user concurrently
+    const [loggedInUserId, listingData] = await Promise.all([
+        getUserIdFromCookieServer(),
+        fetchListingDetails(listingId)
+    ]);
 
-  // 3. Handle Listing Not Found
-  if (!listingData) {
-    console.log(`[EDIT PAGE] Listing not found for ID: ${listingId}`);
-    notFound();
-  }
+    // 3. Handle Listing Not Found
+    if (!listingData) {
+        console.log(`[EDIT PAGE] Listing not found for ID: ${listingId}`);
+        notFound();
+    }
 
-  // 4. Authorization Check: Ensure logged-in user is the owner
-  if (!loggedInUserId || loggedInUserId !== listingData.user.id) {
-    console.warn(`[EDIT PAGE] Unauthorized attempt to edit listing ${listingId} by user ${loggedInUserId}`);
-    redirect(`/product/${listingId}?error=unauthorized`);
-  }
+    // 4. Authorization Check: Ensure logged-in user is the owner
+    if (!loggedInUserId || loggedInUserId !== listingData.user.id) {
+        console.warn(`[EDIT PAGE] Unauthorized attempt to edit listing ${listingId} by user ${loggedInUserId}`);
+        redirect(`/product/${listingId}?error=unauthorized`);
+    }
 
-  // 5. Pass data to the Client Component Form
+    // 5. Pass data to the Client Component Form
   const listing = {
-    _id: listingData.id,
-    title: listingData.title,
-    description: listingData.description,
-    quantity: listingData.details.quantity || '',
-    location: listingData.details.location || '',
-    images: listingData.image ? [{ url: listingData.image, publicId: listingData.imagePublicId || '' }] : [],
-    expiryDate: listingData.details.expiryDate ? new Date(listingData.details.expiryDate).toISOString().split('T')[0] : null,
-    contact: listingData.details.contact || null
+                _id: listingData.id,
+                title: listingData.title,
+                description: listingData.description,
+                quantity: listingData.details.quantity || '',
+                location: listingData.details.location || '',
+                images: listingData.image ? [{ url: listingData.image, publicId: listingData.imagePublicId || '' }] : [],
+                expiryDate: listingData.details.expiryDate ? new Date(listingData.details.expiryDate).toISOString().split('T')[0] : null,
+                contact: listingData.details.contact || null
   };
 
   return <EditForm listing={listing} />;

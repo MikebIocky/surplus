@@ -1,21 +1,18 @@
 // src/models/Order.ts (Alternative/Recommended for Received items)
-import mongoose, { Schema, Document, Model, Types } from 'mongoose';
+import mongoose, { Schema, Document, Types } from 'mongoose';
 
 export interface IOrder extends Document {
-  listing: Types.ObjectId | { _id: Types.ObjectId; title: string; description: string; image?: string; user: { _id: Types.ObjectId; name: string; avatar?: string } }; // Nested population
-  recipient: Types.ObjectId | { _id: Types.ObjectId; name: string };
+  listing: Types.ObjectId;
+  recipient: Types.ObjectId;
+  status: 'pending' | 'approved' | 'rejected';
   claimedAt: Date;
-  // Add other order details if needed (e.g., messages, confirmation status)
 }
 
-const OrderSchema: Schema<IOrder> = new Schema(
-  {
-    listing: { type: Schema.Types.ObjectId, ref: 'Listing', required: true },
-    recipient: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true }, // The user who received
-    claimedAt: { type: Date, default: Date.now },
-  }
-  // No timestamps needed unless you want order creation/update time separate from claim time
-);
+const OrderSchema = new Schema<IOrder>({
+  listing: { type: Schema.Types.ObjectId, ref: 'Listing', required: true },
+  recipient: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  claimedAt: { type: Date, default: Date.now }
+});
 
-const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
-export default Order;
+export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);

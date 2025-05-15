@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Upload } from "lucide-react"; // Loading spinner icon
 import { useToast } from "@/components/ui/use-toast";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface UserProfile {
     id: string;
@@ -221,105 +222,155 @@ export default function SettingsPage() {
         <div className="space-y-8 max-w-3xl mx-auto p-4">
             <h1 className="text-3xl font-bold">Settings</h1>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>Update your personal details here.</CardDescription>
-                </CardHeader>
-                <form onSubmit={handleSubmit}>
+            {/* Appearance Group */}
+            <div>
+                <h2 className="text-xl font-semibold mb-2">Appearance</h2>
+                <Card className="mb-8">
+                    <CardHeader>
+                        <CardTitle>Theme</CardTitle>
+                        <CardDescription>Choose your preferred theme and accent color.</CardDescription>
+                    </CardHeader>
                     <CardContent className="space-y-6">
-                        {/* Avatar Section */}
-                        <div className="space-y-4">
-                            <div className="flex items-center space-x-4">
-                                <Avatar className="w-16 h-16 border">
-                                    <AvatarImage src={imagePreview || avatar} alt={name} />
-                                    <AvatarFallback className="text-xl">
-                                        {name.split(' ').map(n => n[0]).slice(0, 2).join('')}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div className="flex-1">
-                                    <Label htmlFor="avatar" className="cursor-pointer">
-                                        <div className="flex items-center space-x-2">
-                                            <Upload className="w-4 h-4" />
-                                            <span>Change Avatar</span>
-                                        </div>
-                                        <Input
-                                            id="avatar"
-                                            type="file"
-                                            accept="image/jpeg,image/png,image/webp"
-                                            className="hidden"
-                                            onChange={handleImageChange}
-                                            ref={fileInputRef}
-                                            disabled={isLoading}
-                                        />
-                                    </Label>
-                                    <p className="text-xs text-muted-foreground mt-1">
-                                        JPG, PNG or WebP (MAX. 5MB)
-                                    </p>
+                        <div className="space-y-2">
+                            <Label>Theme</Label>
+                            <div className="flex gap-6">
+                                <label className="flex items-center gap-2">
+                                    <input type="radio" name="theme" value="light" disabled />
+                                    Light
+                                </label>
+                                <label className="flex items-center gap-2">
+                                    <input type="radio" name="theme" value="dark" disabled />
+                                    Dark
+                                </label>
+                                <label className="flex items-center gap-2">
+                                    <input type="radio" name="theme" value="system" disabled />
+                                    System
+                                </label>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Accent Color</Label>
+                            <div className="flex gap-3">
+                                {['green', 'blue', 'purple', 'orange', 'red'].map((color) => (
+                                    <button
+                                        key={color}
+                                        type="button"
+                                        className={`w-8 h-8 rounded-full border-2 border-gray-200`}
+                                        style={{ backgroundColor: color }}
+                                        disabled
+                                        aria-label={color.charAt(0).toUpperCase() + color.slice(1)}
+                                    />
+                                ))}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">Theme and accent color coming soon.</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Profile Group */}
+            <div>
+                <h2 className="text-xl font-semibold mb-2">Profile</h2>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Profile Information</CardTitle>
+                        <CardDescription>Update your personal details here.</CardDescription>
+                    </CardHeader>
+                    <form onSubmit={handleSubmit}>
+                        <CardContent className="space-y-6">
+                            {/* Avatar Section */}
+                            <div className="space-y-4">
+                                <div className="flex items-center space-x-4">
+                                    <Avatar className="w-16 h-16 border">
+                                        <AvatarImage src={imagePreview || avatar} alt={name} />
+                                        <AvatarFallback className="text-xl">
+                                            {name.split(' ').map(n => n[0]).slice(0, 2).join('')}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div className="flex-1">
+                                        <Label htmlFor="avatar" className="cursor-pointer">
+                                            <div className="flex items-center space-x-2">
+                                                <Upload className="w-4 h-4" />
+                                                <span>Change Avatar</span>
+                                            </div>
+                                            <Input
+                                                id="avatar"
+                                                type="file"
+                                                accept="image/jpeg,image/png,image/webp"
+                                                className="hidden"
+                                                onChange={handleImageChange}
+                                                ref={fileInputRef}
+                                                disabled={isLoading}
+                                            />
+                                        </Label>
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            JPG, PNG or WebP (MAX. 5MB)
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Email (Display Only) */}
-                        <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input
-                                id="email"
-                                type="email"
-                                value={email}
-                                readOnly
-                                disabled
-                                className="bg-muted/50 cursor-not-allowed"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                Email cannot be changed here.
-                            </p>
-                        </div>
-
-                        {/* Name */}
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Name</Label>
-                            <Input
-                                id="name"
-                                value={name}
-                                onChange={(e) => setName(e.target.value)}
-                                required
-                                disabled={isLoading}
-                            />
-                        </div>
-
-                        {/* Description */}
-                        <div className="space-y-2">
-                            <Label htmlFor="description">Bio / Description</Label>
-                            <Textarea
-                                id="description"
-                                placeholder="Tell us a little about yourself..."
-                                value={description}
-                                onChange={(e) => setDescription(e.target.value)}
-                                rows={4}
-                                disabled={isLoading}
-                            />
-                        </div>
-
-                        {/* Rating Display */}
-                        {rating !== undefined && (
-                            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                                <span>Current Rating:</span>
-                                <span className="font-medium">{rating.toFixed(1)}</span>
+                            {/* Email (Display Only) */}
+                            <div className="space-y-2">
+                                <Label htmlFor="email">Email</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    value={email}
+                                    readOnly
+                                    disabled
+                                    className="bg-muted/50 cursor-not-allowed"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    Email cannot be changed here.
+                                </p>
                             </div>
-                        )}
-                    </CardContent>
 
-                    <CardFooter className="border-t pt-6">
-                        <Button type="submit" disabled={isLoading || isUploading}>
-                            {(isLoading || isUploading) && (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {/* Name */}
+                            <div className="space-y-2">
+                                <Label htmlFor="name">Name</Label>
+                                <Input
+                                    id="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    required
+                                    disabled={isLoading}
+                                />
+                            </div>
+
+                            {/* Description */}
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Bio / Description</Label>
+                                <Textarea
+                                    id="description"
+                                    placeholder="Tell us a little about yourself..."
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    rows={4}
+                                    disabled={isLoading}
+                                />
+                            </div>
+
+                            {/* Rating Display */}
+                            {rating !== undefined && (
+                                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                                    <span>Current Rating:</span>
+                                    <span className="font-medium">{rating.toFixed(1)}</span>
+                                </div>
                             )}
-                            {isUploading ? "Uploading Image..." : isLoading ? "Saving..." : "Save Changes"}
-                        </Button>
-                    </CardFooter>
-                </form>
-            </Card>
+                        </CardContent>
+
+                        <CardFooter className="border-t pt-6">
+                            <Button type="submit" disabled={isLoading || isUploading}>
+                                {(isLoading || isUploading) && (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                )}
+                                {isUploading ? "Uploading Image..." : isLoading ? "Saving..." : "Save Changes"}
+                            </Button>
+                        </CardFooter>
+                    </form>
+                </Card>
+            </div>
         </div>
     );
 }

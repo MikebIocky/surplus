@@ -71,6 +71,7 @@ export function ProductDetail({
   const [isLoading, setIsLoading] = useState<'rate' | 'get' | null>(null);
   const [selectedRating, setSelectedRating] = useState<number>(5);
   const [isRatingDialogOpen, setIsRatingDialogOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Helper function for status badge styling
   const getStatusClasses = (currentStatus: ProductDetailProps['status']) => {
@@ -149,6 +150,34 @@ export function ProductDetail({
       });
     } finally {
       setIsLoading(null);
+    }
+  };
+
+  const handleMessageClick = async () => {
+    if (!user) {
+      router.push('/log-in');
+      return;
+    }
+
+    try {
+      // Create a new conversation with an initial message
+      const res = await fetch('/api/chat/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId: user.id,
+          content: `Hi! I'm interested in your listing "${title}"`
+        })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        router.push(`/messages/${data.conversation}`);
+      } else {
+        throw new Error('Failed to create conversation');
+      }
+    } catch (err) {
+      alert('Failed to start conversation. Please try again.');
     }
   };
 
@@ -344,11 +373,10 @@ export function ProductDetail({
             </div>
           ) : (
             <div className="flex justify-end gap-2 mb-4">
-              <Link href={`/messages/${[user.id, id].sort().join('_')}`} passHref legacyBehavior>
-                <Button variant="outline" size="sm" asChild>
-                  <a><MessageSquare className="mr-2 h-4 w-4" /> Message</a>
-                </Button>
-              </Link>
+              <Button variant="outline" size="sm" onClick={handleMessageClick} disabled={loading}>
+                {loading ? 'Loading...' : <MessageSquare className="mr-2 h-4 w-4" />}
+                Message
+              </Button>
             </div>
           )}
         </div>

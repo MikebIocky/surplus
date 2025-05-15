@@ -62,12 +62,16 @@ export async function POST(
             return NextResponse.json({ error: 'Order does not belong to this listing' }, { status: 400 });
         }
 
-        if (action === 'approve') {
+        if (action === 'accept') {
+            // Update order status
             order.status = 'approved';
+            
+            // Update listing status and claim details
             listing.status = 'claimed';
             if (listing.pendingClaim?.user) {
                 listing.claimedBy = listing.pendingClaim.user;
                 listing.claimedAt = new Date();
+                
                 // Notify the claimant
                 await Notification.create({
                     user: listing.pendingClaim.user.toString(),
@@ -77,8 +81,11 @@ export async function POST(
                 });
             }
             listing.pendingClaim = undefined;
-        } else if (action === 'reject') {
+        } else if (action === 'decline') {
+            // Update order status
             order.status = 'rejected';
+            
+            // Reset listing status
             listing.status = 'available';
             if (listing.pendingClaim?.user) {
                 // Notify the claimant
@@ -94,10 +101,11 @@ export async function POST(
             return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
         }
 
+        // Save both the order and listing changes
         await Promise.all([order.save(), listing.save()]);
 
         return NextResponse.json({ 
-            message: `Claim ${action}d successfully`,
+            message: `Claim ${action}ed successfully`,
             orderId: order._id
         });
     } catch (error) {
