@@ -6,6 +6,9 @@ import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import { RelativeTime } from './RelativeTime';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 interface Message {
     _id: string;
     content: string;

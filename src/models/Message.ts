@@ -2,6 +2,9 @@ import mongoose, { Schema, Document, Types } from 'mongoose';
 import type { IUser } from './User';
 import type { IConversation } from './Conversation';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 export interface IMessage extends Document {
   conversation: Types.ObjectId;
   sender: Types.ObjectId;

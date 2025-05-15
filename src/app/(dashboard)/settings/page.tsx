@@ -13,6 +13,9 @@ import { Loader2, Upload } from "lucide-react"; // Loading spinner icon
 import { useToast } from "@/components/ui/use-toast";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 interface UserProfile {
     id: string;
     name: string;

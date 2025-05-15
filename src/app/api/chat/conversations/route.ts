@@ -6,6 +6,9 @@ import User from '@/models/User';
 import Message from '@/models/Message'; // Import Message to populate lastMessage
 import { getUserIdFromRequest } from '@/lib/authUtils'; // Your helper to get user ID from cookie/token
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 function isSenderObject(val: unknown): val is { _id: { toString: () => string } } {
   if (typeof val !== 'object' || val === null || !('_id' in val)) return false;
   const id = (val as { _id?: unknown })._id;

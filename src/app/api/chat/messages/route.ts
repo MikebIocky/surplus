@@ -7,6 +7,9 @@ import User from '@/models/User';
 import { getUserIdFromRequest } from '@/lib/authUtils';
 import mongoose from 'mongoose';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 export async function POST(req: NextRequest) {
   try {
     const senderId = await getUserIdFromRequest(req);

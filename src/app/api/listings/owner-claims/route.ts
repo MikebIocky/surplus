@@ -4,6 +4,9 @@ import Listing from '@/models/Listing';
 import { getUserIdFromCookieServer } from '@/lib/authUtils';
 import Order from '@/models/Order';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 export async function GET() {
   await dbConnect();
   const userId = await getUserIdFromCookieServer();

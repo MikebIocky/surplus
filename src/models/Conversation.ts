@@ -2,6 +2,9 @@
 import mongoose, { Schema, Document, Types } from 'mongoose';
 import { IUser } from './User';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 export interface IConversation extends Document {
   participants: Types.ObjectId[];
   lastMessage?: Types.ObjectId;

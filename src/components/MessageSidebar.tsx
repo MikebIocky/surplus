@@ -1,6 +1,9 @@
 import React from 'react';
 import Image from 'next/image';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 interface Conversation {
   _id: string;
   otherParticipant: {

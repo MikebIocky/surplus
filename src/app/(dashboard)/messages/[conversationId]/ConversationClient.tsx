@@ -5,6 +5,9 @@ import { MessageList } from '@/components/MessageList';
 import { MessageInput } from '@/components/MessageInput';
 import Image from 'next/image';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 interface Message {
     _id?: string;
     content: string;

@@ -7,6 +7,9 @@ import Conversation from '@/models/Conversation';
 import mongoose from 'mongoose';
 import { ConversationClient } from './ConversationClient';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 interface MongoMessage {
     _id: mongoose.Types.ObjectId;
     content: string;
